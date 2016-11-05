@@ -81,6 +81,11 @@ def autoencoder(layer_dim, std=1.0):
         Output reconstruction of the input
     cost : Tensor
         Overall cost to use for training
+
+    Notes
+    -----
+    Implementation based on:
+        https://github.com/pkmital/tensorflow_tutorials/blob/master/python/08_denoising_autoencoder.py
     """
     # Input to the network.
     x = tf.placeholder(tf.float32, [None, layer_dim[0]], name='x')

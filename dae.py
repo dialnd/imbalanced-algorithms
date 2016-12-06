@@ -366,7 +366,7 @@ class DAE(object):
         X : ndarray, shape (n_samples, n_features)
             Matrix containing the data to be reconstructed.
 
-        Returns the resconstructed data.
+        Returns the reconstructed data.
         """
         return self.sess.run(self.y, feed_dict={self.x: X})
 

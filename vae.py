@@ -256,7 +256,7 @@ class VAE(object):
         X : ndarray, shape (n_samples, n_features)
             Matrix containing the data to be reconstructed.
 
-        Returns the resconstructed data.
+        Returns the reconstructed data.
         """
         return self.sess.run(self.x_reconstr_mean, feed_dict={self.x: X})
 

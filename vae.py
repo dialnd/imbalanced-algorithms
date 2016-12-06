@@ -68,7 +68,6 @@ class VAE(object):
     def __init__(self, num_epochs, batch_size, hidden_dim, n_input, n_z, 
                  transfer_fct=tf.nn.sigmoid, W_init_fct=init_xavier, 
                  b_init_fct=tf.zeros, learning_rate=0.001, log_every=None):
-
         self.num_epochs = num_epochs
         self.batch_size = batch_size
 
@@ -128,6 +127,10 @@ class VAE(object):
     def _recognition_network(self, layer_dim):
         """Define the recognition network.
 
+        The probabilistic encoder (recognition network) maps inputs onto a 
+        normal distribution in latent space. The transformation is 
+        parameterized and can be learned.
+
         Parameters
         ----------
         layer_dim : list
@@ -140,9 +143,6 @@ class VAE(object):
         z_log_sigma_sq : Tensor
             Log sigma squared of the latent space.
         """
-        # Generate probabilistic encoder (recognition network), which
-        # maps inputs onto a normal distribution in latent space.
-        # The transformation is parameterized and can be learned.
         layer_input = self.x
         for layer_i, n_output in enumerate(layer_dim[1:]):
             n_input = int(layer_input.get_shape()[1])
@@ -166,6 +166,10 @@ class VAE(object):
     def _generator_network(self, layer_dim):
         """Define the generator network.
 
+        The probabilistic decoder (decoder network) maps points in latent 
+        space onto a Bernoulli distribution in data space. The transformation 
+        is parameterized and can be learned.
+
         Parameters
         ----------
         layer_dim : list
@@ -176,9 +180,6 @@ class VAE(object):
         x_reconstr_mean : Tensor
             Mean of the reconstructed data.
         """
-        # Generate probabilistic decoder (decoder network), which maps points 
-        # in latent space onto a Bernoulli distribution in data space.
-        # The transformation is parameterized and can be learned.
         layer_input = self.z
         for layer_i, n_output in enumerate(reversed(layer_dim[1:])):
             n_input = int(layer_input.get_shape()[1])
@@ -197,21 +198,23 @@ class VAE(object):
         return x_reconstr_mean
 
     def _create_loss_optimizer(self):
-        """Define the cost function."""
-        # The loss is composed of two terms:
-        # 1.) The reconstruction loss (the negative log probability of the 
-        #     input under the reconstructed Bernoulli distribution induced by 
-        #     the decoder in the data space).
-        #     This can be interpreted as the number of "nats" required for 
-        #     reconstructing the input when the activation in latent is given.
-        reconstr_loss = binary_crossentropy(self.x_reconstr_mean, self.x)
+        """Define the cost function.
 
-        # 2.) The latent loss, which is defined as the Kullback Leibler 
-        #     divergence between the distribution in latent space induced by 
-        #     the encoder on the data and some prior. This acts as a kind of 
-        #     regularizer.
-        #     This can be interpreted as the number of "nats" required for 
-        #     transmitting the latent space distribution given the prior.
+        The loss is composed of two terms:
+        1.) The reconstruction loss (the negative log probability of the 
+            input under the reconstructed Bernoulli distribution induced by 
+            the decoder in the data space).
+            This can be interpreted as the number of "nats" required for 
+            reconstructing the input when the activation in latent is given.
+
+        2.) The latent loss, which is defined as the Kullback Leibler 
+            divergence between the distribution in latent space induced by 
+            the encoder on the data and some prior. This acts as a kind of 
+            regularizer.
+            This can be interpreted as the number of "nats" required for 
+            transmitting the latent space distribution given the prior.
+        """
+        reconstr_loss = binary_crossentropy(self.x_reconstr_mean, self.x)
         latent_loss = -0.5 * tf.reduce_sum(1 + self.z_log_sigma_sq 
                                            - tf.square(self.z_mean) 
                                            - tf.exp(self.z_log_sigma_sq), 1)
@@ -235,9 +238,8 @@ class VAE(object):
     def generate(self, z_mu=None):
         """Generate data by sampling from latent space.
 
-        If z_mu is not None, data for this point in latent space is
-        generated. Otherwise, z_mu is drawn from prior in latent 
-        space.
+        If z_mu is not None, data for this point in latent space is generated. 
+        Otherwise, z_mu is drawn from prior in latent space.
         """
         if z_mu is None:
             z_mu = np.random.normal(size=self.net_arch['n_z'])
@@ -323,10 +325,10 @@ class VAE(object):
         """
         samples = np.empty(shape=(N, self.net_arch['n_input']))
         for i in range(N):
-            # Dimensionality of z_mu is fixed, so we cannot generate N samples 
-            # directly. Instead, we can take the first sample and repeat. 
-            # Alternatively, we could use tf.train.Saver to save the graph 
-            # variables and reinitialize the graph with z_mu of size N.
+            # Note: The dimensionality of z_mu is fixed, so we cannot generate 
+            # N samples directly. Instead, we can take the first sample and 
+            # repeat. Alternatively, we could use tf.train.Saver to save the 
+            # graph variables and reinitialize the graph with z_mu of size N.
             samples[i] = self.generate()[0]
         return samples
 

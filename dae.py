@@ -365,9 +365,10 @@ class DAE(object):
         ----------
         X : ndarray, shape (n_samples, n_features)
             Matrix containing the data to be reconstructed.
+
+        Returns the resconstructed data.
         """
-        return self.sess.run(self.y, 
-                             feed_dict={self.x: X})
+        return self.sess.run(self.y, feed_dict={self.x: X})
 
     def partial_fit(self, X):
         """Train model based on mini-batch of input data.

@@ -109,11 +109,10 @@ class VAE(object):
         # Use recognition network to determine mean and (log) variance of 
         # Gaussian distribution in latent space.
         self.z_mean, self.z_log_sigma_sq = \
-            self._recognition_network(layer_dim=layer_dim)
+            self._recognition_network(self.x, layer_dim)
 
         # Draw one sample z from Gaussian distribution.
-        n_z = self.net_arch['n_z']
-        eps = tf.random_normal((self.batch_size, n_z), 0, 1, 
+        eps = tf.random_normal((self.batch_size, self.net_arch['n_z']), 0, 1, 
                                dtype=tf.float32)
         # z = mu + sigma * epsilon
         self.z = tf.add(self.z_mean, 
@@ -122,9 +121,9 @@ class VAE(object):
         # Use generator to determine mean of Bernoulli distribution of 
         # reconstructed input.
         self.x_reconstr_mean = \
-            self._generator_network(layer_dim=layer_dim)
+            self._generator_network(self.z, layer_dim)
             
-    def _recognition_network(self, layer_dim):
+    def _recognition_network(self, layer_input, layer_dim):
         """Define the recognition network.
 
         The probabilistic encoder (recognition network) maps inputs onto a 
@@ -143,7 +142,6 @@ class VAE(object):
         z_log_sigma_sq : Tensor
             Log sigma squared of the latent space.
         """
-        layer_input = self.x
         for layer_i, n_output in enumerate(layer_dim[1:]):
             n_input = int(layer_input.get_shape()[1])
             W = tf.Variable(self.W_init_fct([n_input, n_output]), dtype=tf.float32)
@@ -163,7 +161,7 @@ class VAE(object):
             tf.add(tf.matmul(layer_input, W_out_log_sigma), b_out_log_sigma)
         return (z_mean, z_log_sigma_sq)
 
-    def _generator_network(self, layer_dim):
+    def _generator_network(self, layer_input, layer_dim):
         """Define the generator network.
 
         The probabilistic decoder (decoder network) maps points in latent 
@@ -180,7 +178,6 @@ class VAE(object):
         x_reconstr_mean : Tensor
             Mean of the reconstructed data.
         """
-        layer_input = self.z
         for layer_i, n_output in enumerate(reversed(layer_dim[1:])):
             n_input = int(layer_input.get_shape()[1])
             W = tf.Variable(self.W_init_fct([n_input, n_output]), dtype=tf.float32)
@@ -207,7 +204,7 @@ class VAE(object):
             This can be interpreted as the number of "nats" required for 
             reconstructing the input when the activation in latent is given.
 
-        2.) The latent loss, which is defined as the Kullback Leibler 
+        2.) The latent loss, which is defined as the Kullback-Leibler 
             divergence between the distribution in latent space induced by 
             the encoder on the data and some prior. This acts as a kind of 
             regularizer.
@@ -231,8 +228,8 @@ class VAE(object):
         X : ndarray, shape (n_samples, n_features)
             Matrix containing the data to be transformed.
         """
-        # Note: This maps to mean of distribution; we could alternatively 
-        # sample from Gaussian distribution.
+        # Note: This maps to mean of the distribution; we could alternatively 
+        # sample from the Gaussian distribution.
         return self.sess.run(self.z_mean, feed_dict={self.x: X})
 
     def generate(self, z_mu=None):
@@ -243,8 +240,8 @@ class VAE(object):
         """
         if z_mu is None:
             z_mu = np.random.normal(size=self.net_arch['n_z'])
-        # Note: This maps to mean of distribution; we could alternatively
-        # sample from Gaussian distribution.
+        # Note: This maps to mean of the distribution; we could alternatively
+        # sample from the Gaussian distribution.
         z_mu = np.reshape(z_mu, (1, self.net_arch['n_z']))
         return self.sess.run(self.x_reconstr_mean, 
                              #feed_dict={self.z: z_mu})

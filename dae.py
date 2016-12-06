@@ -260,9 +260,9 @@ class DAE(object):
         layer_dim = np.append(np.array(self.net_arch['n_input']), 
             self.net_arch['hidden_dim'])
 
-        self.z, self.y, self.p_X_chain = self._autoencoder(layer_dim=layer_dim)
+        self.z, self.y, self.p_X_chain = self._autoencoder(self.x, layer_dim)
 
-    def _autoencoder(self, layer_dim):
+    def _autoencoder(self, layer_input, layer_dim):
         """Build a deep denoising autoencoder with tied weights. Implements
         walkback training (optional).
 
@@ -336,13 +336,13 @@ class DAE(object):
         p_X_chain = []
         # Perform layer updates.
         if self.walkbacks > 0:
-            x = self.x
+            x = layer_input
             for i in range(self.walkbacks):
                 x, y, z = update_layers(x)
                 p_X_chain.append(y)
                 x = binomial_vec(y, shape=tf.shape(y)) # sample from p(X|...)
         else:
-            x, y, z = update_layers(self.x)
+            x, y, z = update_layers(layer_input)
 
         return (z, y, p_X_chain)
 

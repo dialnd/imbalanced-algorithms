@@ -382,7 +382,7 @@ class DAE(object):
         cost, opt = self.sess.run((self.cost, self.optimizer), feed_dict={self.x: X})
         return cost
 
-    def fit(self, X, display_step=None):
+    def fit(self, X, shuffle=True, display_step=None):
         """Training cycle.
 
         Parameters
@@ -395,22 +395,29 @@ class DAE(object):
         n_samples = X.shape[0]
 
         for epoch in range(self.num_epochs):
-            np.random.shuffle(X)
+            if shuffle:
+                indices = np.arange(len(X))
+                np.random.shuffle(indices)
             avg_cost = 0.
-            batch_idxs = n_samples // self.batch_size
-            for idx in range(batch_idxs):
-                batch = np.array(X[idx*self.batch_size:(idx+1)*self.batch_size])
+            # Loop over all batches.
+            start_idxs = range(0, len(X) - self.batch_size + 1, self.batch_size)
+            for start_idx in start_idxs:
+                if shuffle:
+                    excerpt = indices[start_idx:start_idx + self.batch_size]
+                else:
+                    excerpt = slice(start_idx, start_idx + self.batch_size)
+                batch = np.array(X[excerpt])
 
                 # Fit training using batch data.
                 cost = self.partial_fit(batch)
                 # Compute average loss.
                 avg_cost += cost / n_samples * self.batch_size
 
-            if batch_idxs > 0:
+            if len(start_idxs) > 0:
                 # Display logs per epoch step.
                 if display_step and epoch % display_step == 0:
-                    print("Epoch:", '%04d' % (epoch+1), \
-                          "cost=", "{:.4f}".format(avg_cost))
+                    print("Epoch: {:d}".format(epoch+1), \
+                          "cost: {:.4f}".format(avg_cost))
 
     def sample(self, in_samples, N):
         """Generate samples via pseudo-Gibbs sampling.
@@ -516,8 +523,8 @@ def test_mnist():
               corrupt_type='salt_and_pepper',
               walkbacks=0
               )
-    dae.fit(x_sample_all, display_step=1)
 
+    dae.fit(x_sample_all, display_step=1)
     x_sample = mnist.test.next_batch(100)[0]
     x_reconstruct = dae.reconstruct(x_sample)
 
@@ -542,7 +549,7 @@ def test_mnist():
     fig, ax = plt.subplots(40, 10, figsize=(10, 40))
     for i in range(400):
         ax[i/10][i%10].imshow(np.reshape(samples[i], (28,28)), cmap='gray')
-    plt.axis('off')
+        ax[i/10][i%10].axis('off')
     #plt.show()
     plt.savefig('dae_mnist_samples.png')
 

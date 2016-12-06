@@ -221,7 +221,7 @@ class DAE(object):
         self.num_epochs = num_epochs
         self.batch_size = batch_size
 
-        self.network_architecture = {
+        self.net_arch = {
             'hidden_dim': hidden_dim,
             'n_input': n_input,
             'n_output': n_input
@@ -240,7 +240,7 @@ class DAE(object):
         self.log_every = log_every
 
         # TensorFlow graph input.
-        self.x = tf.placeholder(tf.float32, [None, self.network_architecture['n_input']])
+        self.x = tf.placeholder(tf.float32, [None, self.net_arch['n_input']])
 
         # Create autoencoder network.
         self._create_network()
@@ -257,8 +257,8 @@ class DAE(object):
 
     def _create_network(self):
         """Create a denoising autoencoder network."""
-        layer_dim = np.append(np.array(self.network_architecture['n_input']), 
-            self.network_architecture['hidden_dim'])
+        layer_dim = np.append(np.array(self.net_arch['n_input']), 
+            self.net_arch['hidden_dim'])
 
         self.z, self.y, self.p_X_chain = self._autoencoder(layer_dim=layer_dim)
 
@@ -330,7 +330,7 @@ class DAE(object):
             # Reconstruction through the network.
             y = layer_input
 
-            return x, y, z
+            return (x, y, z)
 
         # Define p(X|...).
         p_X_chain = []
@@ -358,6 +358,17 @@ class DAE(object):
         self.optimizer = \
             tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost)
 
+    def reconstruct(self, X):
+        """Use DAE to reconstruct given data.
+
+        Parameters
+        ----------
+        X : ndarray, shape (n_samples, n_features)
+            Matrix containing the data to be reconstructed.
+        """
+        return self.sess.run(self.y, 
+                             feed_dict={self.x: X})
+
     def partial_fit(self, X):
         """Train model based on mini-batch of input data.
 
@@ -371,23 +382,24 @@ class DAE(object):
         cost, opt = self.sess.run((self.cost, self.optimizer), feed_dict={self.x: X})
         return cost
 
-    def fit(self, data, display_step=None):
+    def fit(self, X, display_step=None):
         """Training cycle.
 
         Parameters
         ----------
-        data : ndarray, shape (n_samples, n_features)
+        X : ndarray, shape (n_samples, n_features)
             Matrix containing the data to be learned.
         """
         if display_step is None:
             display_step = self.log_every
-        n_samples = data.shape[0]
+        n_samples = X.shape[0]
 
         for epoch in range(self.num_epochs):
+            np.random.shuffle(X)
             avg_cost = 0.
             batch_idxs = n_samples // self.batch_size
             for idx in range(batch_idxs):
-                batch = np.array(data[idx*self.batch_size:(idx+1)*self.batch_size])
+                batch = np.array(X[idx*self.batch_size:(idx+1)*self.batch_size])
 
                 # Fit training using batch data.
                 cost = self.partial_fit(batch)
@@ -398,7 +410,7 @@ class DAE(object):
                 # Display logs per epoch step.
                 if display_step and epoch % display_step == 0:
                     print("Epoch:", '%04d' % (epoch+1), \
-                          "cost=", "{:.9f}".format(avg_cost))
+                          "cost=", "{:.4f}".format(avg_cost))
 
     def sample(self, in_samples, N):
         """Generate samples via pseudo-Gibbs sampling.
@@ -415,7 +427,7 @@ class DAE(object):
         if not hasattr(in_samples, "__len__"):
             in_samples = [in_samples]
 
-        samples = np.empty(shape=(N, self.network_architecture['n_input']))
+        samples = np.empty(shape=(N, self.net_arch['n_input']))
         for i in range(N):
             if i == 0:
                 # Choose a random sample as the initialization.
@@ -423,7 +435,7 @@ class DAE(object):
                 out_sample = self.sess.run(self.y, feed_dict={self.x: in_sample})
             else:
                 out_sample = self.sess.run(self.y, feed_dict={
-                    self.x: samples[i-1].reshape((1,-1))
+                    self.x: samples[i-1].reshape((1, -1))
                     })
             samples[i] = out_sample
 
@@ -490,23 +502,42 @@ def test_mnist():
     mpl.use('Agg')
     import matplotlib.pyplot as plt
     import tensorflow.examples.tutorials.mnist.input_data as input_data
+
     mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
     n_samples = mnist.train.num_examples
 
     x_sample_all, _ = mnist.train.next_batch(55000)
-    test_input = mnist.test.next_batch(1)[0]
 
-    model = DAE(num_epochs=5,
-                batch_size=100,
-                hidden_dim=(500, 500),
-                n_input=784, # MNIST data input (img shape: 28*28)
-                corrupt_prob=0.4,
-                corrupt_type='salt_and_pepper',
-                walkbacks=0
-                )
-    model.fit(x_sample_all, display_step=1)
-    samples = model.sample(test_input, 400)
-    model.close()
+    dae = DAE(num_epochs=5,
+              batch_size=100,
+              hidden_dim=(500, 500),
+              n_input=784, # MNIST data input (img shape: 28*28)
+              corrupt_prob=0.4,
+              corrupt_type='salt_and_pepper',
+              walkbacks=0
+              )
+    dae.fit(x_sample_all, display_step=1)
+
+    x_sample = mnist.test.next_batch(100)[0]
+    x_reconstruct = dae.reconstruct(x_sample)
+
+    plt.figure(figsize=(8, 12))
+    for i in range(5):
+        plt.subplot(5, 2, 2*i + 1)
+        plt.imshow(x_sample[i].reshape(28, 28), vmin=0, vmax=1)
+        plt.title("Test input")
+        plt.colorbar()
+        plt.subplot(5, 2, 2*i + 2)
+        plt.imshow(x_reconstruct[i].reshape(28, 28), vmin=0, vmax=1)
+        plt.title("Reconstruction")
+        plt.colorbar()
+    plt.tight_layout()
+    #plt.show()
+    plt.savefig('dae_mnist_rec.png')
+
+    test_input = mnist.test.next_batch(1)[0]
+    samples = dae.sample(test_input, 400)
+    dae.close()
 
     fig, ax = plt.subplots(40, 10, figsize=(10, 40))
     for i in range(400):

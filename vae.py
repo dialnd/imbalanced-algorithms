@@ -212,8 +212,8 @@ class VAE(object):
         """
         reconstr_loss = binary_crossentropy(self.x_reconstr_mean, self.x)
         latent_loss = -0.5 * tf.reduce_mean(1 + self.z_log_sigma_sq 
-                                           - tf.square(self.z_mean) 
-                                           - tf.exp(self.z_log_sigma_sq), 1)
+                                            - tf.square(self.z_mean) 
+                                            - tf.exp(self.z_log_sigma_sq), 1)
         self.reconstr_loss = reconstr_loss
         self.cost = tf.reduce_mean(tf.add(reconstr_loss, latent_loss)) # average over batch
         # Use ADAM optimizer.
@@ -276,10 +276,11 @@ class VAE(object):
         samples = np.empty(shape=(N, self.net_arch['n_input']))
         for i in range(N):
             # Note: The dimensionality of z_mu is fixed, so we cannot generate 
-            # N samples directly. Instead, we can take the first sample and 
-            # repeat. Alternatively, we could use tf.train.Saver to save the 
-            # graph variables and reinitialize the graph with z_mu of size N.
-            samples[i] = self.generate()[0]
+            # N samples directly. Instead, we can take the first sample or a 
+            # random sample and repeat. Alternatively, we could save the graph 
+            # variables and reinitialize the graph with z_mu of size N.
+            #samples[i] = self.generate()[0]
+            samples[i] = self.generate()[np.random.randint(self.batch_size, size=1)]
         return samples
 
     def partial_fit(self, X):

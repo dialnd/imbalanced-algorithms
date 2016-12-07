@@ -58,6 +58,24 @@ def linear(input_, output_size, scope=None, stddev=0.5, bias_start=0.0, with_w=F
         else:
             return tf.matmul(input_, matrix) + bias
 
+def dropout(X, p=0.5):
+    """Dropout function.
+
+    Parameters
+    ----------
+    X : Tensor
+        Tensor on which to apply dropout.
+    p : float
+        Probability level for dropping an element (used in binomial distribution).
+
+    Returns
+    -------
+    Tensor
+        Tensor with dropout applied.
+    """
+    noise = binomial(shape=tf.shape(X), p=p)
+    return tf.div(tf.mul(X, noise), p)
+
 def binomial(shape=[1], p=0.5, dtype='float32'):
     """Generate a binomial distribution.
 
@@ -96,24 +114,6 @@ def binomial_vec(p_vec, shape=[1], dtype='float32'):
     return tf.select(tf.less(dist, p_vec), tf.ones(shape, dtype=dtype), 
            tf.zeros(shape, dtype=dtype))
 
-def dropout(X, p=0.5):
-    """Dropout function.
-
-    Parameters
-    ----------
-    X : Tensor
-        Tensor on which to apply dropout.
-    p : float
-        Probability level for dropping an element (used in binomial distribution).
-
-    Returns
-    -------
-    Tensor
-        Tensor with dropout applied.
-    """
-    noise = binomial(shape=tf.shape(X), p=p)
-    return tf.div(tf.mul(X, noise), p)
-
 def salt_and_pepper_noise(X, rate=0.3):
     """Take an input tensor and add salt-and-pepper noise, where a fraction 
     `rate` of elements of X (chosen at random) is set to zero or one according 
@@ -124,12 +124,12 @@ def salt_and_pepper_noise(X, rate=0.3):
     X : Tensor/Placeholder
         Input to corrupt.
     rate : float
-        The fraction of elements to be set to zer or one.
+        Fraction of elements to be set to zero or one.
 
     Returns
     -------
     x_corrupted : Tensor
-        Rate percentage of values corrupted.
+        Input tensor with `rate` fraction of values corrupted.
     """
     a = binomial(shape=tf.shape(X), p=1-rate)
     b = binomial(shape=tf.shape(X), p=0.5)
@@ -146,12 +146,12 @@ def masking_noise(X, rate=0.3):
     X : Tensor/Placeholder
         Input to corrupt.
     rate : float
-        The fraction of elements to be masked.
+        Fraction of elements to be masked.
 
     Returns
     -------
     x_corrupted : Tensor
-        Rate percentage of values corrupted.
+        Input tensor with `rate` fraction of values corrupted.
     """
     a = binomial(shape=tf.shape(X), p=1-rate)
     return tf.mul(X, a)
@@ -164,12 +164,13 @@ def gaussian_noise(X, std=1.0):
     X : Tensor/Placeholder
         Input to corrupt.
     std: float
-        The desired standard deviation of noise.
+        Desired standard deviation of the noise.
 
     Returns
     -------
     x_corrupted : Tensor
-        Input plus Gaussian noise with mean zero and standard deviation std.
+        Input tensor plus random Gaussian noise with mean 0.0 and standard 
+        deviation `std`.
     """
     return tf.add(X, tf.random_normal(shape=tf.shape(X),
                                       mean=0.0,
@@ -188,12 +189,12 @@ class DAE(object):
         Number of units per hidden layer for encoder/decoder.
     n_input : int
         Number of inputs to initial layer.
+    corrupt_type : str
+        Corrupting function (`salt_and_pepper`, `masked`, or `gaussian`).
     corrupt_prob : float
         Probability of generating corrupted values.
     corrupt_std : float
         Standard deviation of corrupted values (gaussian).
-    corrupt_type : str
-        Type of corrupting function (gaussian or salt_and_pepper).
     walkbacks : int
         Number of walkbacks to use.
     transfer_fct : object
@@ -234,10 +235,10 @@ class DAE(object):
         - https://github.com/yaoli/GSN
         - https://github.com/peteykun/GSN
     """
-    def __init__(self, num_epochs, batch_size, hidden_dim, n_input, corrupt_prob=0.5, 
-                 corrupt_std=0.25, corrupt_type='salt_and_pepper', walkbacks=0, 
-                 transfer_fct=tf.nn.sigmoid, W_init_fct=init_xavier, b_init_fct=tf.zeros, 
-                 learning_rate=0.001, log_every=None):
+    def __init__(self, num_epochs, batch_size, hidden_dim, n_input, 
+                 corrupt_type='salt_and_pepper', corrupt_prob=0.5, corrupt_std=0.25, 
+                 walkbacks=0, transfer_fct=tf.nn.sigmoid, W_init_fct=init_xavier, 
+                 b_init_fct=tf.zeros, learning_rate=0.001, log_every=None):
         self.num_epochs = num_epochs
         self.batch_size = batch_size
 
@@ -490,9 +491,9 @@ def main(data, N, args):
                 args.batch_size,
                 args.hidden_dim,
                 args.n_input,
+                args.corrupt_type,
                 args.corrupt_prob,
                 args.corrupt_std,
-                args.corrupt_type,
                 args.walkbacks,
                 args.transfer_fct,
                 args.W_init_fct,
@@ -514,14 +515,14 @@ def parse_args():
                         help='Number of units per hidden layer for encoder/decoder.')
     parser.add_argument('--n_input', type=int, default=2,
                         help='Number of inputs to initial layer.')
-    parser.add_argument('--corrupt_prob', type=float, default=0.5,
-                        help='Probability of generating corrupted values.')
-    parser.add_argument('--corrupt_std', type=float, default=0.25,
-                        help='Standard deviation of corrupted values (gaussian).')
     parser.add_argument('--corrupt_type', type=str,
                         choices=['salt_and_pepper', 'masking', 'gaussian'], 
                         default='salt_and_pepper',
                         help='Type of corrupting function.')
+    parser.add_argument('--corrupt_prob', type=float, default=0.5,
+                        help='Probability of generating corrupted values.')
+    parser.add_argument('--corrupt_std', type=float, default=0.25,
+                        help='Standard deviation of corrupted values (gaussian).')
     parser.add_argument('--walkbacks', type=int, default=0,
                         help='Number of walkbacks to use.')
     parser.add_argument('--transfer_fct', type=object, default=tf.nn.sigmoid,
@@ -548,12 +549,12 @@ def test_mnist():
 
     x_sample_all, _ = mnist.train.next_batch(55000)
 
-    dae = DAE(num_epochs=5,
+    dae = DAE(num_epochs=10,
               batch_size=100,
               hidden_dim=(512, 256, 64),
               n_input=784, # MNIST data input (img shape: 28*28)
-              corrupt_prob=0.4,
               corrupt_type='salt_and_pepper',
+              corrupt_prob=0.3,
               walkbacks=0
               )
 

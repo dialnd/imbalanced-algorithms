@@ -23,7 +23,7 @@ def binary_crossentropy(output, target, offset=1e-10):
     """
     output_ = tf.clip_by_value(output, offset, 1 - offset)
     return -tf.reduce_sum(target * tf.log(output_) 
-        + (1 - target) * tf.log(1 - output_), None)
+        + (1 - target) * tf.log(1 - output_), 1)
 
 class VAE(object):
     """Variational Autoencoder (VAE) implemented using TensorFlow.
@@ -211,10 +211,11 @@ class VAE(object):
             latent space distribution given the prior.
         """
         reconstr_loss = binary_crossentropy(self.x_reconstr_mean, self.x)
-        latent_loss = -0.5 * tf.reduce_sum(1 + self.z_log_sigma_sq 
+        latent_loss = -0.5 * tf.reduce_mean(1 + self.z_log_sigma_sq 
                                            - tf.square(self.z_mean) 
                                            - tf.exp(self.z_log_sigma_sq), 1)
-        self.cost = tf.reduce_mean(reconstr_loss + latent_loss) # average over batch
+        self.reconstr_loss = reconstr_loss
+        self.cost = tf.reduce_mean(tf.add(reconstr_loss, latent_loss)) # average over batch
         # Use ADAM optimizer.
         self.optimizer = \
             tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost)
@@ -226,9 +227,10 @@ class VAE(object):
         ----------
         X : ndarray, shape (n_samples, n_features)
             Matrix containing the data to be transformed.
+
+        Note: This maps to mean of the distribution; we could alternatively 
+        sample from the Gaussian distribution.
         """
-        # Note: This maps to mean of the distribution; we could alternatively 
-        # sample from the Gaussian distribution.
         return self.sess.run(self.z_mean, feed_dict={self.x: X})
 
     def generate(self, z_mu=None):
@@ -236,15 +238,18 @@ class VAE(object):
 
         If z_mu is not None, data for this point in latent space is generated. 
         Otherwise, z_mu is drawn from prior in latent space.
+
+        Note: This maps to mean of the distribution; we could alternatively
+        sample from the Gaussian distribution.
         """
         if z_mu is None:
-            z_mu = np.random.normal(size=self.net_arch['n_z'])
-        # Note: This maps to mean of the distribution; we could alternatively
-        # sample from the Gaussian distribution.
-        z_mu = np.reshape(z_mu, (1, self.net_arch['n_z']))
-        return self.sess.run(self.x_reconstr_mean, 
-                             #feed_dict={self.z: z_mu})
-                             feed_dict={self.z: np.repeat(z_mu, self.batch_size, axis=0)})
+            z_mu = np.random.normal(size=(self.batch_size, self.net_arch['n_z']))
+            return self.sess.run(self.x_reconstr_mean, feed_dict={self.z: z_mu})
+        else:
+            z_mu = np.reshape(z_mu, (1, self.net_arch['n_z']))
+            return self.sess.run(self.x_reconstr_mean, feed_dict={
+                                 self.z: np.repeat(z_mu, self.batch_size, axis=0)
+                                 })
 
     def reconstruct(self, X):
         """Use VAE to reconstruct given data.
@@ -410,7 +415,7 @@ def test_mnist():
     #plt.show()
     plt.savefig('vae_mnist_rec.png')
 
-    vae_2d = VAE(num_epochs=5,
+    vae_2d = VAE(num_epochs=10,
                  batch_size=100,
                  hidden_dim=(512, 256),
                  n_input=784, # MNIST data input (img shape: 28*28)

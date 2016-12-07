@@ -10,21 +10,20 @@ def init_xavier(fan, constant=1):
     """Xavier initialization of network weights."""
     # https://stackoverflow.com/questions/33640581/how-to-do-xavier-initialization-on-tensorflow
     fan_in, fan_out = fan[0], fan[1]
-    low = -constant*np.sqrt(6.0/(fan_in + fan_out)) 
-    high = constant*np.sqrt(6.0/(fan_in + fan_out))
+    low = -constant * np.sqrt(6.0 / (fan_in + fan_out)) 
+    high = constant * np.sqrt(6.0 / (fan_in + fan_out))
     return tf.random_uniform((fan_in, fan_out), 
                              minval=low, maxval=high, 
                              dtype=tf.float32)
 
-def binary_crossentropy(output, target):
-    """Compute the binary cross-entropy.
+def binary_crossentropy(output, target, offset=1e-10):
+    """Compute the binary cross-entropy per sample.
 
-    Add 1e-10 to avoid evaluation of log(0.0).
+    Add offset to avoid evaluation of log(0.0).
     """
-    #return -tf.reduce_sum(target * tf.log(output + 1e-10) 
-    #       + (1-target) * tf.log(1-output + 1e-10), 1)
-    return -tf.reduce_sum(target * tf.log(tf.clip_by_value(output, 1e-10, 1.0)) 
-        + (1-target) * tf.log(tf.clip_by_value(1-output, 1e-10, 1.0)))
+    output_ = tf.clip_by_value(output, offset, 1 - offset)
+    return -tf.reduce_sum(target * tf.log(output_) 
+        + (1 - target) * tf.log(1 - output_))
 
 def lrelu(X, leak=0.2, name='lrelu'):
     """Leaky rectified linear unit (LReLU)."""

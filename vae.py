@@ -200,16 +200,16 @@ class VAE(object):
         The loss is composed of two terms:
         1.) The reconstruction loss (the negative log probability of the 
             input under the reconstructed Bernoulli distribution induced by 
-            the decoder in the data space).
-            This can be interpreted as the number of "nats" required for 
-            reconstructing the input when the activation in latent is given.
+            the decoder in the data space). This can be interpreted as the 
+            number of "nats" required for reconstructing the input when the 
+            activation in latent space is given.
 
         2.) The latent loss, which is defined as the Kullback-Leibler 
             divergence between the distribution in latent space induced by 
             the encoder on the data and some prior. This acts as a kind of 
-            regularizer.
-            This can be interpreted as the number of "nats" required for 
-            transmitting the latent space distribution given the prior.
+            regularizer. This can be interpreted as the number of "nats" 
+            required for transmitting the latent space distribution given the 
+            prior.
         """
         reconstr_loss = binary_crossentropy(self.x_reconstr_mean, self.x)
         latent_loss = -0.5 * tf.reduce_sum(1 + self.z_log_sigma_sq 
@@ -258,6 +258,25 @@ class VAE(object):
         Returns the reconstructed data.
         """
         return self.sess.run(self.x_reconstr_mean, feed_dict={self.x: X})
+
+    def sample(self, N):
+        """Generate samples.
+
+        Parameters
+        ----------
+        N : int
+            Number of samples to generate.
+
+        Returns samples.
+        """
+        samples = np.empty(shape=(N, self.net_arch['n_input']))
+        for i in range(N):
+            # Note: The dimensionality of z_mu is fixed, so we cannot generate 
+            # N samples directly. Instead, we can take the first sample and 
+            # repeat. Alternatively, we could use tf.train.Saver to save the 
+            # graph variables and reinitialize the graph with z_mu of size N.
+            samples[i] = self.generate()[0]
+        return samples
 
     def partial_fit(self, X):
         """Train model based on mini-batch of input data.
@@ -309,25 +328,6 @@ class VAE(object):
                 if display_step and epoch % display_step == 0:
                     print("Epoch: {:d}".format(epoch+1), \
                           "cost: {:.4f}".format(avg_cost))
-
-    def sample(self, N):
-        """Generate samples.
-
-        Parameters
-        ----------
-        N : int
-            Number of samples to generate.
-
-        Returns samples.
-        """
-        samples = np.empty(shape=(N, self.net_arch['n_input']))
-        for i in range(N):
-            # Note: The dimensionality of z_mu is fixed, so we cannot generate 
-            # N samples directly. Instead, we can take the first sample and 
-            # repeat. Alternatively, we could use tf.train.Saver to save the 
-            # graph variables and reinitialize the graph with z_mu of size N.
-            samples[i] = self.generate()[0]
-        return samples
 
     def close(self):
         """Closes the TensorFlow session."""

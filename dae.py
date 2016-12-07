@@ -358,6 +358,16 @@ class DAE(object):
         self.optimizer = \
             tf.train.AdamOptimizer(learning_rate=self.learning_rate).minimize(self.cost)
 
+    def transform(self, X):
+        """Transform data by mapping it into the latent space.
+
+        Parameters
+        ----------
+        X : ndarray, shape (n_samples, n_features)
+            Matrix containing the data to be transformed.
+        """
+        return self.sess.run(self.z, feed_dict={self.x: X})
+
     def reconstruct(self, X):
         """Use DAE to reconstruct given data.
 
@@ -369,6 +379,35 @@ class DAE(object):
         Returns the reconstructed data.
         """
         return self.sess.run(self.y, feed_dict={self.x: X})
+
+    def sample(self, in_samples, N):
+        """Generate samples via pseudo-Gibbs sampling.
+
+        Parameters
+        ----------
+        in_samples : ndarray, shape (n_samples, n_features)
+            Matrix containing the data from which to sample.
+        N : int
+            Number of samples to generate.
+
+        Returns samples.
+        """
+        if not hasattr(in_samples, "__len__"):
+            in_samples = [in_samples]
+
+        samples = np.empty(shape=(N, self.net_arch['n_input']))
+        for i in range(N):
+            if i == 0:
+                # Choose a random sample as the initialization.
+                in_sample = in_samples[np.random.randint(len(in_samples), size=1)]
+                out_sample = self.sess.run(self.y, feed_dict={self.x: in_sample})
+            else:
+                out_sample = self.sess.run(self.y, feed_dict={
+                    self.x: samples[i-1].reshape((1, -1))
+                    })
+            samples[i] = out_sample
+
+        return samples
 
     def partial_fit(self, X):
         """Train model based on mini-batch of input data.
@@ -419,35 +458,6 @@ class DAE(object):
                 if display_step and epoch % display_step == 0:
                     print("Epoch: {:d}".format(epoch+1), \
                           "cost: {:.4f}".format(avg_cost))
-
-    def sample(self, in_samples, N):
-        """Generate samples via pseudo-Gibbs sampling.
-
-        Parameters
-        ----------
-        in_samples : ndarray, shape (n_samples, n_features)
-            Matrix containing the data from which to sample.
-        N : int
-            Number of samples to generate.
-
-        Returns samples.
-        """
-        if not hasattr(in_samples, "__len__"):
-            in_samples = [in_samples]
-
-        samples = np.empty(shape=(N, self.net_arch['n_input']))
-        for i in range(N):
-            if i == 0:
-                # Choose a random sample as the initialization.
-                in_sample = in_samples[np.random.randint(len(in_samples), size=1)]
-                out_sample = self.sess.run(self.y, feed_dict={self.x: in_sample})
-            else:
-                out_sample = self.sess.run(self.y, feed_dict={
-                    self.x: samples[i-1].reshape((1, -1))
-                    })
-            samples[i] = out_sample
-
-        return samples
 
     def close(self):
         """Closes the TensorFlow session."""

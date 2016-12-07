@@ -23,7 +23,7 @@ def binary_crossentropy(output, target, offset=1e-10):
     """
     output_ = tf.clip_by_value(output, offset, 1 - offset)
     return -tf.reduce_sum(target * tf.log(output_) 
-        + (1 - target) * tf.log(1 - output_))
+        + (1 - target) * tf.log(1 - output_), 1)
 
 def lrelu(X, leak=0.2, name='lrelu'):
     """Leaky rectified linear unit (LReLU)."""
@@ -114,15 +114,17 @@ def dropout(X, p=0.5):
     noise = binomial(shape=tf.shape(X), p=p)
     return tf.div(tf.mul(X, noise), p)
 
-def corrupt_salt_and_pepper(X, rate=0.3):
-    """Take an input tensor and add salt-and-pepper noise.
+def salt_and_pepper_noise(X, rate=0.3):
+    """Take an input tensor and add salt-and-pepper noise, where a fraction 
+    `rate` of elements of X (chosen at random) is set to zero or one according 
+    to a fair coin flip.
 
     Parameters
     ----------
     X : Tensor/Placeholder
         Input to corrupt.
     rate : float
-        The desired rate of corruption.
+        The fraction of elements to be set to zer or one.
 
     Returns
     -------
@@ -135,7 +137,26 @@ def corrupt_salt_and_pepper(X, rate=0.3):
     c = tf.select(tf.equal(a, z), b, z)
     return tf.add(tf.mul(X, a), c)
 
-def corrupt_gaussian(X, std=1.0):
+def masking_noise(X, rate=0.3):
+    """Apply masking noise to data in X, whereby a fraction `rate` of elements 
+    of X (chosen at random) is forced to zero.
+
+    Parameters
+    ----------
+    X : Tensor/Placeholder
+        Input to corrupt.
+    rate : float
+        The fraction of elements to be masked.
+
+    Returns
+    -------
+    x_corrupted : Tensor
+        Rate percentage of values corrupted.
+    """
+    a = binomial(shape=tf.shape(X), p=1-rate)
+    return tf.mul(X, a)
+
+def gaussian_noise(X, std=1.0):
     """Take an input tensor and add Gaussian noise.
 
     Parameters
@@ -148,7 +169,7 @@ def corrupt_gaussian(X, std=1.0):
     Returns
     -------
     x_corrupted : Tensor
-        Adds Gaussian noise to the input with mean zero and standard deviation std.
+        Input plus Gaussian noise with mean zero and standard deviation std.
     """
     return tf.add(X, tf.random_normal(shape=tf.shape(X),
                                       mean=0.0,
@@ -296,13 +317,15 @@ class DAE(object):
             y : Tensor
                 Output reconstruction of the input.
             """
-            if self.corrupt_type == 'gaussian':
-                layer_input = corrupt_gaussian(x, std=self.corrupt_std) \
+            if self.corrupt_type == 'salt_and_pepper':
+                layer_input = salt_and_pepper_noise(x, self.corrupt_prob)
+            elif self.corrupt_type == 'masking':
+                layer_input = masking_noise(x, self.corrupt_prob)
+            elif self.corrupt_type == 'gaussian':
+                layer_input = gaussian_noise(x, std=self.corrupt_std) \
                                 * self.corrupt_prob + x * (1 - self.corrupt_prob)
-            elif self.corrupt_type == 'salt_and_pepper':
-                layer_input = corrupt_salt_and_pepper(x, self.corrupt_prob)
             else:
-                layer_input = corrupt_salt_and_pepper(x, self.corrupt_prob)
+                layer_input = salt_and_pepper_noise(x, self.corrupt_prob)
 
             # Build the encoder.
             encoder = []
@@ -349,9 +372,9 @@ class DAE(object):
         """Define the cost function."""
         if self.walkbacks > 0:
             cross_entropies = [binary_crossentropy(y, self.x) for y in self.p_X_chain]
-            self.cost = tf.add_n(cross_entropies)
+            self.cost = tf.reduce_mean(tf.add_n(cross_entropies))
         else:
-            self.cost = binary_crossentropy(self.y, self.x)
+            self.cost = tf.reduce_mean(binary_crossentropy(self.y, self.x))
 
         # Use ADAM optimizer.
         self.optimizer = \
@@ -496,7 +519,7 @@ def parse_args():
     parser.add_argument('--corrupt_std', type=float, default=0.25,
                         help='Standard deviation of corrupted values (gaussian).')
     parser.add_argument('--corrupt_type', type=str,
-                        choices=['gaussian', 'salt_and_pepper'], 
+                        choices=['salt_and_pepper', 'masking', 'gaussian'], 
                         default='salt_and_pepper',
                         help='Type of corrupting function.')
     parser.add_argument('--walkbacks', type=int, default=0,
@@ -527,7 +550,7 @@ def test_mnist():
 
     dae = DAE(num_epochs=5,
               batch_size=100,
-              hidden_dim=(500, 500),
+              hidden_dim=(512, 256, 64),
               n_input=784, # MNIST data input (img shape: 28*28)
               corrupt_prob=0.4,
               corrupt_type='salt_and_pepper',

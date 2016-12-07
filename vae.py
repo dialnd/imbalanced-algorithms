@@ -23,7 +23,7 @@ def binary_crossentropy(output, target, offset=1e-10):
     """
     output_ = tf.clip_by_value(output, offset, 1 - offset)
     return -tf.reduce_sum(target * tf.log(output_) 
-        + (1 - target) * tf.log(1 - output_))
+        + (1 - target) * tf.log(1 - output_), None)
 
 class VAE(object):
     """Variational Autoencoder (VAE) implemented using TensorFlow.
@@ -384,11 +384,11 @@ def test_mnist():
 
     x_sample_all, _ = mnist.train.next_batch(55000)
 
-    vae = VAE(num_epochs=5,
+    vae = VAE(num_epochs=10,
               batch_size=100,
-              hidden_dim=(500, 500),
+              hidden_dim=(512, 256),
               n_input=784, # MNIST data input (img shape: 28*28)
-              n_z=20 # dimensionality of latent space
+              n_z=64 # dimensionality of latent space
               )
     vae.fit(x_sample_all, display_step=1)
 
@@ -412,7 +412,7 @@ def test_mnist():
 
     vae_2d = VAE(num_epochs=5,
                  batch_size=100,
-                 hidden_dim=(500, 500),
+                 hidden_dim=(512, 256),
                  n_input=784, # MNIST data input (img shape: 28*28)
                  n_z=2 # dimensionality of latent space
                  )

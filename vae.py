@@ -87,7 +87,7 @@ class VAE(object):
 
         # TensorFlow graph input.
         self.x = tf.placeholder(tf.float32, [None, self.net_arch['n_input']])
-        
+
         # Create autoencoder network.
         self._create_network()
         # Define loss function based variational upper-bound and corresponding optimizer.

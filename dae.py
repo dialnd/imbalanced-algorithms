@@ -194,7 +194,7 @@ class DAE(object):
     corrupt_prob : float
         Probability of generating corrupted values.
     corrupt_std : float
-        Standard deviation of corrupted values (gaussian).
+        Standard deviation of corrupted values (Gaussian).
     walkbacks : int
         Number of walkbacks to use.
     transfer_fct : object
@@ -248,21 +248,21 @@ class DAE(object):
             'n_output': n_input
             }
 
+        self.corrupt_type = corrupt_type
         self.corrupt_prob = corrupt_prob
         self.corrupt_std = corrupt_std
-        self.corrupt_type = corrupt_type
         self.walkbacks = walkbacks
 
         self.transfer_fct = transfer_fct
         self.W_init_fct = W_init_fct
         self.b_init_fct = b_init_fct
         self.learning_rate = learning_rate
-        
+
         self.log_every = log_every
 
         # TensorFlow graph input.
         self.x = tf.placeholder(tf.float32, [None, self.net_arch['n_input']])
-
+        
         # Create autoencoder network.
         self._create_network()
         # Define loss function.
@@ -301,6 +301,33 @@ class DAE(object):
         p_X_chain : array
             Walkback training chain.
         """
+        def corrupt_input(x, corrupt_prob, corrupt_std):
+            """Corrupt data according to the corruption type.
+
+            Parameters
+            ----------
+            x : Tensor
+                Input placeholder to the network.
+            corrupt_prob : float
+                Probability of generating corrupted values.
+            corrupt_std : float
+                Standard deviation of corrupted values (Gaussian).
+    
+            Returns
+            -------
+            Corrupted data, x_corrupted.
+            """
+            if self.corrupt_type == 'salt_and_pepper':
+                x_corrupted = salt_and_pepper_noise(x, corrupt_prob)
+            elif self.corrupt_type == 'masking':
+                x_corrupted = masking_noise(x, corrupt_prob)
+            elif self.corrupt_type == 'gaussian':
+                x_corrupted = gaussian_noise(x, std=corrupt_std) \
+                                * corrupt_prob + x * (1 - corrupt_prob)
+            else:
+                x_corrupted = salt_and_pepper_noise(x, corrupt_prob)
+            return x_corrupted
+
         def update_layers(x):
             """Perform layer updates.
 
@@ -318,15 +345,7 @@ class DAE(object):
             y : Tensor
                 Output reconstruction of the input.
             """
-            if self.corrupt_type == 'salt_and_pepper':
-                layer_input = salt_and_pepper_noise(x, self.corrupt_prob)
-            elif self.corrupt_type == 'masking':
-                layer_input = masking_noise(x, self.corrupt_prob)
-            elif self.corrupt_type == 'gaussian':
-                layer_input = gaussian_noise(x, std=self.corrupt_std) \
-                                * self.corrupt_prob + x * (1 - self.corrupt_prob)
-            else:
-                layer_input = salt_and_pepper_noise(x, self.corrupt_prob)
+            layer_input = corrupt_input(x, self.corrupt_prob, self.corrupt_std)
 
             # Build the encoder.
             encoder = []
@@ -423,7 +442,9 @@ class DAE(object):
             if i == 0:
                 # Choose a random sample as the initialization.
                 in_sample = in_samples[np.random.randint(len(in_samples), size=1)]
-                out_sample = self.sess.run(self.y, feed_dict={self.x: in_sample})
+                out_sample = self.sess.run(self.y, feed_dict={
+                    self.x: in_sample
+                    })
             else:
                 out_sample = self.sess.run(self.y, feed_dict={
                     self.x: samples[i-1].reshape((1, -1))

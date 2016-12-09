@@ -82,6 +82,10 @@ class RandomUnderSampler(object):
 class RUSBoost(AdaBoostClassifier):
     """Implementation of RUSBoost.
 
+    RUSBoost introduces data sampling into the AdaBoost algorithm by 
+    undersampling the majority class using random oversampling on each 
+    boosting iteration.
+
     Parameters
     ----------
     n_samples : int (default=100)

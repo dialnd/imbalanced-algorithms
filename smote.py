@@ -92,6 +92,9 @@ class SMOTE(object):
 class SMOTEBoost(AdaBoostClassifier):
     """Implementation of SMOTEBoost.
 
+    SMOTEBoost introduces data sampling into the AdaBoost algorithm by 
+    oversampling the minority class using SMOTE on each boosting iteration.
+
     Parameters
     ----------
     n_samples : int, optional (default=100)

@@ -123,7 +123,7 @@ class RUSBoost(AdaBoostClassifier):
 
     def fit(self, X, y, sample_weight=None, minority_target=None):
         """Build a boosted classifier/regressor from the training set (X, y),
-        performing SMOTE during each boosting step.
+        performing random undersampling during each boosting step.
 
         Parameters
         ----------

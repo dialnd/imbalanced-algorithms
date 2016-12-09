@@ -41,7 +41,8 @@ class SMOTE(object):
 
         Returns
         -------
-        S : array, shape = [(N/100) * n_minority_samples, n_features]
+        S : array, shape = [N, n_features]
+            Returns synthetic samples.
         """
         np.random.seed(seed=self.random_state)
 
@@ -115,9 +116,12 @@ class BorderlineSMOTE(object):
 
         Returns
         -------
-        S : Synthetic samples of minorities in danger zone.
-        safe : Safe minorities.
-        danger : Minorities of danger zone.
+        S : array, shape = [n_samples, n_features]
+            Synthetic samples of minority samples in the danger zone.
+        safe : array, shape = [safe_minority_samples, n_features]
+            Safe minority samples.
+        danger : array, shape = [danger_minority_samples, n_features]
+            Minority samples in the danger zone.
         """
         np.random.seed(seed=self.random_state)
 
@@ -202,7 +206,7 @@ class SMOTEBoost(AdaBoostClassifier):
     k_neighbors : int
         Number of nearest neighbors.
     n_samples : int
-        Number of new synthetic samples.
+        Number of new synthetic samples per boosting step.
 
     References
     ----------
@@ -256,7 +260,7 @@ class SMOTEBoost(AdaBoostClassifier):
 
         Notes
         -----
-        Based on the scikit-learn AdaBoostClassifier `fit` method.
+        Based on the scikit-learn v0.18 AdaBoostClassifier `fit` method.
         """
         # Check parameters.
         if self.learning_rate <= 0:

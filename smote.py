@@ -26,7 +26,7 @@ class SMOTE(object):
             Synthetic Minority Over-Sampling Technique." Journal of Artificial 
             Intelligence Research (JAIR), 2002.
     """
-    def __init__(self, k_neighbors, return_mode='only', random_state=None):
+    def __init__(self, k_neighbors=3, return_mode='only', random_state=None):
         self.k = k_neighbors
         self.return_mode = return_mode
         self.random_state = random_state
@@ -76,6 +76,8 @@ class SMOTE(object):
         ----------
         X : array-like, shape = [n_minority_samples, n_features]
             Holds the minority samples.
+        minority_target : object
+            Minority class label.
         """
         self.X = X
         self.minority_target = minority_target
@@ -101,7 +103,7 @@ class BorderlineSMOTE(object):
             Over-Sampling Method in Imbalanced Data Sets Learning." 
             International Conference on Intelligent Computing (ICIC), 2005.
     """
-    def __init__(self, k_neighbors, return_mode='only', random_state=None):
+    def __init__(self, k_neighbors=3, return_mode='only', random_state=None):
         self.k = k_neighbors
         self.return_mode = return_mode
         self.random_state = random_state
@@ -252,6 +254,8 @@ class SMOTEBoost(AdaBoostClassifier):
         sample_weight : array-like of shape = [n_samples], optional
             Sample weights. If None, the sample weights are initialized to
             1 / n_samples.
+        minority_target : object
+            Minority class label.
 
         Returns
         -------

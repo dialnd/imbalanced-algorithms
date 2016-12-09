@@ -1,6 +1,9 @@
-# [ND DIAL: Imbalanced Algorithms](https://github.com/dialnd/imbalanced-algorithms)
+.. -*- mode: rst -*-
 
-<a href="http://www.icensa.com/"><img src="http://i.imgur.com/NN4vi0n.png" width="300" align="right"></a>
+ND DIAL: Imbalanced Algorithms
+==============================
+
+.. image:: http://i.imgur.com/NN4vi0n.png
 
 Algorithms for imbalanced learning, with a focus on using deep/representational learning. Below is a list of the methods currently implemented.
 

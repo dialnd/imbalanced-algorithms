@@ -88,6 +88,9 @@ class RUSBoost(AdaBoostClassifier):
         Number of new synthetic samples per boosting step.
     min_ratio : float
         Minimum ratio of majority to minority class samples to generate.
+    with_replacement : bool, optional (default=True)
+        Undersample with replacement.
+
     References
     ----------
         [1] C. Seiffert, T. M. Khoshgoftaar, J. V. Hulse, and A. Napolitano. 

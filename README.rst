@@ -12,7 +12,7 @@ Algorithms for imbalanced learning, with a focus on using deep/representational 
 
 * Ensemble Sampling
     1. RUSBoost [4]_
-    1. SMOTEBoost [5]_
+    2. SMOTEBoost [5]_
 
 References:
 -----------

@@ -117,15 +117,14 @@ class SMOTEBoost(AdaBoostClassifier):
                  random_state=None):
 
         self.algorithm = algorithm
+        self.smote = SMOTE(k_neighbors=k_neighbors, return_mode='only', random_state=random_state)
+        self.n_samples = n_samples
 
         super(SMOTEBoost, self).__init__(
             base_estimator=base_estimator,
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             random_state=random_state)
-
-        self.smote = SMOTE(k_neighbors=k_neighbors, return_mode='only', random_state=self.random_state)
-        self.n_samples = n_samples
 
     def fit(self, X, y, sample_weight=None, minority_target=None):
         """Build a boosted classifier/regressor from the training set (X, y),

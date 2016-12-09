@@ -8,11 +8,11 @@ Algorithms for imbalanced learning, with a focus on using deep/representational 
 * Oversampling
     1. SMOTE - Synthetic Minority Over-sampling Technique [1]_
     2. Borderline-SMOTE [2]_
-    3. DAE - Denoising Autoencoder [4]_
-    4. VAE - Variational Autoencoder [5]_
+    3. DAE - Denoising Autoencoder [3]_
+    4. VAE - Variational Autoencoder [4]_
 
 * Ensemble Sampling
-    1. SMOTEBoost [3]_
+    1. SMOTEBoost [5]_
 
 References:
 -----------
@@ -21,8 +21,8 @@ References:
 
 .. [2] : H. Han, W-Y Wang, and B-H Mao. "Borderline-SMOTE: A New Over-Sampling Method in Imbalanced Data Sets Learning." International Conference on Intelligent Computing (ICIC), 2005.
 
-.. [3] : N. V. Chawla, A. Lazarevic, L. O. Hall, and K. W. Bowyer. "SMOTEBoost: Improving Prediction of the Minority Class in Boosting." European Conference on Principles of Data Mining and Knowledge Discovery (PKDD), 2003.
+.. [3] : P. Vincent, H. Larochelle, I. Lajoie, Y. Bengio, and P.-A. Manzagol. "Stacked Denoising Autoencoders: Learning Useful Representations in a Deep Network with a Local Denoising Criterion". Journal of Machine Learning Research (JMLR), 2010.
 
-.. [4] : P. Vincent, H. Larochelle, I. Lajoie, Y. Bengio, and P.-A. Manzagol. "Stacked Denoising Autoencoders: Learning Useful Representations in a Deep Network with a Local Denoising Criterion". Journal of Machine Learning Research (JMLR), 2010.
+.. [4] : D. P. Kingma and M. Welling. "Auto-Encoding Variational Bayes". arXiv preprint arXiv:1312.6114, 2013.
 
-.. [5] : D. P. Kingma and M. Welling. "Auto-Encoding Variational Bayes". arXiv preprint arXiv:1312.6114, 2013.
+.. [5] : N. V. Chawla, A. Lazarevic, L. O. Hall, and K. W. Bowyer. "SMOTEBoost: Improving Prediction of the Minority Class in Boosting." European Conference on Principles of Data Mining and Knowledge Discovery (PKDD), 2003.

@@ -257,7 +257,7 @@ class SMOTEBoost(AdaBoostClassifier):
         sample_weight : array-like of shape = [n_samples], optional
             Sample weights. If None, the sample weights are initialized to
             1 / n_samples.
-        minority_target : object
+        minority_target : int
             Minority class label.
 
         Returns

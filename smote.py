@@ -76,7 +76,7 @@ class SMOTE(object):
         ----------
         X : array-like, shape = [n_minority_samples, n_features]
             Holds the minority samples.
-        minority_target : object
+        minority_target : int
             Minority class label.
         """
         self.X = X
@@ -166,7 +166,7 @@ class BorderlineSMOTE(object):
         else:
             pass
 
-    def fit(self, X, y):
+    def fit(self, X, y, minority_target=None):
         """Train model based on input data.
 
         Parameters
@@ -176,7 +176,7 @@ class BorderlineSMOTE(object):
         y : array-like, shape = [n__samples]
             Holds the class targets for samples.
         minority_target : int
-            Value for minority class.
+            Minority class label.
         
         Returns
         -------
@@ -188,11 +188,14 @@ class BorderlineSMOTE(object):
 
         self.sample_count, _ = self.X.shape
 
-        # Determine the minority class label.
-        stats_c_ = Counter(y)
-        maj_c_ = max(stats_c_, key=stats_c_.get)
-        min_c_ = min(stats_c_, key=stats_c_.get)
-        self.minority_target = min_c_
+        if minority_target:
+            self.minority_target = minority_target
+        else:
+            # Determine the minority class label.
+            stats_c_ = Counter(y)
+            maj_c_ = max(stats_c_, key=stats_c_.get)
+            min_c_ = min(stats_c_, key=stats_c_.get)
+            self.minority_target = min_c_
 
         # Learn nearest neighbors on complete training set.
         self.neigh = NearestNeighbors(n_neighbors=self.k+1)
@@ -237,7 +240,7 @@ class SMOTEBoost(AdaBoostClassifier):
             learning_rate=learning_rate,
             random_state=random_state)
 
-    def fit(self, X, y, sample_weight=None, minority_target=1):
+    def fit(self, X, y, sample_weight=None, minority_target=None):
         """Build a boosted classifier/regressor from the training set (X, y),
         performing SMOTE during each boosting step.
 
@@ -298,6 +301,15 @@ class SMOTEBoost(AdaBoostClassifier):
                     "Attempting to fit with a non-positive "
                     "weighted number of samples.")
 
+        if minority_target is None:
+            # Determine the minority class label.
+            stats_c_ = Counter(y)
+            maj_c_ = max(stats_c_, key=stats_c_.get)
+            min_c_ = min(stats_c_, key=stats_c_.get)
+            self.minority_target = min_c_
+        else:
+            self.minority_target = minority_target
+
         # Check parameters.
         self._validate_estimator()
 
@@ -310,10 +322,10 @@ class SMOTEBoost(AdaBoostClassifier):
 
         for iboost in range(self.n_estimators):
             # SMOTE step.
-            X_min = X[np.where(y == minority_target)]
+            X_min = X[np.where(y == self.minority_target)]
             self.smote.fit(X_min)
             X_syn = self.smote.sample(self.n_samples)
-            y_syn = np.full(X_syn.shape[0], fill_value=minority_target, dtype=np.int64)
+            y_syn = np.full(X_syn.shape[0], fill_value=self.minority_target, dtype=np.int64)
 
             # Normalize the synthetic instance weights based on the original 
             # training set size.

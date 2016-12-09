@@ -55,12 +55,13 @@ class VAE(object):
     log_every : int
         Print loss after this many steps.
 
-    Notes
-    -----
-    See the original paper for more details:
+    References
+    ----------
         [1] D. P. Kingma and M. Welling. "Auto-Encoding Variational Bayes". 
             arXiv preprint arXiv:1312.6114, 2013.
 
+    Notes
+    -----
     Based on related code:
         - https://jmetzen.github.io/2015-11-27/vae.html
     """
@@ -262,22 +263,23 @@ class VAE(object):
         """
         return self.sess.run(self.x_reconstr_mean, feed_dict={self.x: X})
 
-    def sample(self, N):
+    def sample(self, n_samples):
         """Generate samples.
 
         Parameters
         ----------
-        N : int
+        n_samples : int
             Number of samples to generate.
 
         Returns samples.
         """
-        samples = np.empty(shape=(N, self.net_arch['n_input']))
-        for i in range(N):
+        samples = np.empty(shape=(n_samples, self.net_arch['n_input']))
+        for i in range(n_samples):
             # Note: The dimensionality of z_mu is fixed, so we cannot generate 
-            # N samples directly. Instead, we can take the first sample or a 
-            # random sample and repeat. Alternatively, we could save the graph 
-            # variables and reinitialize the graph with z_mu of size N.
+            # `n_samples` samples directly. Instead, we can take the first 
+            # sample or a random sample and repeat. Alternatively, we could 
+            # save the graph variables and reinitialize the graph with z_mu of 
+            # size `n_samples`.
             #samples[i] = self.generate()[0]
             samples[i] = self.generate()[np.random.randint(self.batch_size, size=1)]
         return samples
@@ -303,6 +305,12 @@ class VAE(object):
         ----------
         X : ndarray, shape (n_samples, n_features)
             Matrix containing the data to be learned.
+        
+
+        Returns
+        -------
+        self : object
+            Returns self.
         """
         if display_step is None:
             display_step = self.log_every
@@ -333,11 +341,13 @@ class VAE(object):
                     print("Epoch: {:d}".format(epoch+1), \
                           "cost: {:.4f}".format(avg_cost))
 
+        return self
+
     def close(self):
         """Closes the TensorFlow session."""
         self.sess.close()
 
-def main(data, N, args):
+def main(data, n_samples, args):
     model = VAE(args.num_epochs,
                 args.batch_size,
                 args.hidden_dim,
@@ -349,7 +359,7 @@ def main(data, N, args):
                 args.learning_rate,
                 args.log_every)
     model.fit(data)
-    samples = model.sample(N)
+    samples = model.sample(n_samples)
     model.close()
     return samples
 

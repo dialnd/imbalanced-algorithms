@@ -208,8 +208,8 @@ class DAE(object):
     log_every : int
         Print loss after this many steps.
 
-    Notes
-    -----
+    References
+    ----------
     See the original paper for more details:
         [1] P. Vincent, H. Larochelle, I. Lajoie, Y. Bengio, and P.-A. Manzagol. 
             "Stacked Denoising Autoencoders: Learning Useful Representations in 
@@ -225,11 +225,14 @@ class DAE(object):
         [3] C. Bellinger, C. Drummond, and N. Japkowicz. "Beyond the 
             Boundaries of SMOTE". Joint European Conference on Machine Learning 
             and Knowledge Discovery in Databases (ECML-PKDD), 2016.
+
         [4] C. Bellinger, N. Japkowicz, and C. Drummond. "Synthetic 
             Oversampling for Advanced Radioactive Threat Detection". IEEE 14th 
             International Conference on Machine Learning and Applications 
             (ICMLA), 2015.
 
+    Notes
+    -----
     Based on related code:
         - https://github.com/pkmital/tensorflow_tutorials
         - https://github.com/yaoli/GSN
@@ -422,14 +425,14 @@ class DAE(object):
         """
         return self.sess.run(self.y, feed_dict={self.x: X})
 
-    def sample(self, in_samples, N):
+    def sample(self, in_samples, n_samples):
         """Generate samples via pseudo-Gibbs sampling.
 
         Parameters
         ----------
         in_samples : ndarray, shape (n_samples, n_features)
             Matrix containing the data from which to sample.
-        N : int
+        n_samples : int
             Number of samples to generate.
 
         Returns samples.
@@ -437,8 +440,8 @@ class DAE(object):
         if not hasattr(in_samples, "__len__"):
             in_samples = [in_samples]
 
-        samples = np.empty(shape=(N, self.net_arch['n_input']))
-        for i in range(N):
+        samples = np.empty(shape=(n_samples, self.net_arch['n_input']))
+        for i in range(n_samples):
             if i == 0:
                 # Choose a random sample as the initialization.
                 in_sample = in_samples[np.random.randint(len(in_samples), size=1)]
@@ -473,6 +476,12 @@ class DAE(object):
         ----------
         X : ndarray, shape (n_samples, n_features)
             Matrix containing the data to be learned.
+        
+
+        Returns
+        -------
+        self : object
+            Returns self.
         """
         if display_step is None:
             display_step = self.log_every
@@ -503,11 +512,13 @@ class DAE(object):
                     print("Epoch: {:d}".format(epoch+1), \
                           "cost: {:.4f}".format(avg_cost))
 
+        return self
+
     def close(self):
         """Closes the TensorFlow session."""
         self.sess.close()
 
-def main(data, N, args):
+def main(data, n_samples, args):
     model = DAE(args.num_epochs,
                 args.batch_size,
                 args.hidden_dim,
@@ -522,7 +533,7 @@ def main(data, N, args):
                 args.learning_rate,
                 args.log_every)
     model.fit(data)
-    samples = model.gen_samples(N)
+    samples = model.gen_samples(n_samples)
     model.close()
     return samples
 

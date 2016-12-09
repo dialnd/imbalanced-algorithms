@@ -117,8 +117,8 @@ class SMOTEBoost(AdaBoostClassifier):
                  random_state=None):
 
         self.algorithm = algorithm
-        self.smote = SMOTE(k_neighbors=k_neighbors, return_mode='only', random_state=random_state)
         self.n_samples = n_samples
+        self.smote = SMOTE(k_neighbors=k_neighbors, return_mode='only', random_state=random_state)
 
         super(SMOTEBoost, self).__init__(
             base_estimator=base_estimator,

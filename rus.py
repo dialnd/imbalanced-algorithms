@@ -4,7 +4,6 @@ import numpy as np
 from sklearn.base import is_regressor
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.ensemble.forest import BaseForest
-from sklearn.neighbors import NearestNeighbors
 from sklearn.preprocessing import normalize
 from sklearn.tree.tree import BaseDecisionTree
 from sklearn.utils import check_random_state

@@ -181,7 +181,7 @@ class DAE(object):
     The DAE is an extension of the classical autoencoder takes as input a 
     partially corrupted and uses training to recover and reconstruct the 
     original undistorted input [1]. Pseudo-Gibbs sampling is used to generate 
-    samples, with walkback training [2].
+    samples, with optional walkback training [2].
 
     The DAE has been generalized to address oversampling problems [3] [4].
 

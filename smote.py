@@ -327,8 +327,7 @@ class SMOTEBoost(AdaBoostClassifier):
             X_syn = self.smote.sample(self.n_samples)
             y_syn = np.full(X_syn.shape[0], fill_value=self.minority_target, dtype=np.int64)
 
-            # Normalize the synthetic instance weights based on the original 
-            # training set size.
+            # Normalize synthetic sample weights based on current training set.
             sample_weight_syn = np.empty(X_syn.shape[0], dtype=np.float64)
             sample_weight_syn[:] = 1. / X.shape[0]
 

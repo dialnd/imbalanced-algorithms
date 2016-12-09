@@ -1,4 +1,3 @@
-import random
 from collections import Counter
 
 import numpy as np
@@ -44,7 +43,6 @@ class SMOTE(object):
         S : array, shape = [n_samples, n_features]
             Returns synthetic samples.
         """
-        random.seed(self.random_state)
         np.random.seed(seed=self.random_state)
 
         S = np.zeros(shape=(n_samples, self.n_features))
@@ -55,7 +53,7 @@ class SMOTE(object):
             # Exclude the sample itself.
             nn = self.neigh.kneighbors(self.X[j].reshape(1, -1), 
                                        return_distance=False)[:, 1:]
-            nn_index = random.choice(nn[0])
+            nn_index = np.random.choice(nn[0])
 
             dif = self.X[nn_index] - self.X[j]
             gap = np.random.random()

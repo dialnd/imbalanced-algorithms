@@ -4,6 +4,7 @@ ND DIAL: Imbalanced Algorithms
 ==============================
 
 .. image:: http://i.imgur.com/NN4vi0n.png
+   :height 50 px
    :scale: 25 %
 
 Algorithms for imbalanced learning, with a focus on using deep/representational learning. Below is a list of the methods currently implemented.

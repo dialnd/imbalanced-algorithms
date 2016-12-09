@@ -53,7 +53,8 @@ class SMOTE(object):
             j = np.random.randint(0, self.X.shape[0])
 
             # Exclude the sample itself.
-            nn = self.neigh.kneighbors(self.X[j].reshape(1, -1), return_distance=False)[:, 1:]
+            nn = self.neigh.kneighbors(self.X[j].reshape(1, -1), 
+                                       return_distance=False)[:, 1:]
             nn_index = random.choice(nn[0])
 
             dif = self.X[nn_index] - self.X[j]
@@ -118,7 +119,8 @@ class SMOTEBoost(AdaBoostClassifier):
 
         self.algorithm = algorithm
         self.n_samples = n_samples
-        self.smote = SMOTE(k_neighbors=k_neighbors, return_mode='only', random_state=random_state)
+        self.smote = SMOTE(k_neighbors=k_neighbors, return_mode='only', 
+                           random_state=random_state)
 
         super(SMOTEBoost, self).__init__(
             base_estimator=base_estimator,
@@ -211,7 +213,8 @@ class SMOTEBoost(AdaBoostClassifier):
             X_min = X[np.where(y == self.minority_target)]
             self.smote.fit(X_min)
             X_syn = self.smote.sample(self.n_samples)
-            y_syn = np.full(X_syn.shape[0], fill_value=self.minority_target, dtype=np.int64)
+            y_syn = np.full(X_syn.shape[0], fill_value=self.minority_target, 
+                            dtype=np.int64)
 
             # Normalize synthetic sample weights based on current training set.
             sample_weight_syn = np.empty(X_syn.shape[0], dtype=np.float64)
@@ -222,10 +225,13 @@ class SMOTEBoost(AdaBoostClassifier):
             y = np.append(y, y_syn)
 
             # Combine the weights.
-            sample_weight = np.append(sample_weight, sample_weight_syn).reshape(-1, 1)
-            sample_weight = np.squeeze(normalize(sample_weight, axis=0, norm='l1'))
+            sample_weight = \
+                np.append(sample_weight, sample_weight_syn).reshape(-1, 1)
+            sample_weight = \
+                np.squeeze(normalize(sample_weight, axis=0, norm='l1'))
 
-            X, y, sample_weight = shuffle(X, y, sample_weight, random_state=random_state)
+            X, y, sample_weight = shuffle(X, y, sample_weight, 
+                                          random_state=random_state)
 
             # Boosting step.
             sample_weight, estimator_weight, estimator_error = self._boost(

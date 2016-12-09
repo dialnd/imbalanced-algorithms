@@ -263,6 +263,3 @@ class SMOTEBoost(AdaBoostClassifier):
                 sample_weight /= sample_weight_sum
 
         return self
-
-    def predict(self, X):
-        return super(SMOTEBoost, self).predict(X)

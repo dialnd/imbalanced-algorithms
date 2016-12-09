@@ -267,6 +267,3 @@ class RUSBoost(AdaBoostClassifier):
                 sample_weight /= sample_weight_sum
 
         return self
-
-    def predict(self, X):
-        return super(RUSBoost, self).predict(X)

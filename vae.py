@@ -27,6 +27,10 @@ def binary_crossentropy(output, target, offset=1e-10):
 class VAE(object):
     """Variational Autoencoder (VAE) implemented using TensorFlow.
 
+    The VAE learns a directed probabilistic model of input data represented by 
+    continuous latent variables, using a neural network to perform efficient
+    approximate posterior inference [1].
+
     This implementation uses probabilistic encoders and decoders using Gaussian 
     distributions realized by multi-layer perceptrons. The VAE can be learned
     end-to-end.
@@ -56,8 +60,8 @@ class VAE(object):
 
     References
     ----------
-        [1] D. P. Kingma and M. Welling. "Auto-Encoding Variational Bayes". 
-            arXiv preprint arXiv:1312.6114, 2013.
+    .. [1] D. P. Kingma and M. Welling. "Auto-Encoding Variational Bayes". 
+           arXiv preprint arXiv:1312.6114, 2013.
 
     Notes
     -----

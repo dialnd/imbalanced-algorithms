@@ -21,9 +21,9 @@ class SMOTE(object):
 
     References
     ----------
-        [1] N. V. Chawla, K. W. Bowyer, L. O. Hall, and P. Kegelmeyer. "SMOTE: 
-            Synthetic Minority Over-Sampling Technique." Journal of Artificial 
-            Intelligence Research (JAIR), 2002.
+    .. [1] N. V. Chawla, K. W. Bowyer, L. O. Hall, and P. Kegelmeyer. "SMOTE: 
+           Synthetic Minority Over-Sampling Technique." Journal of Artificial 
+           Intelligence Research (JAIR), 2002.
     """
     def __init__(self, k_neighbors=3, return_mode='only', random_state=None):
         self.k = k_neighbors
@@ -104,10 +104,10 @@ class SMOTEBoost(AdaBoostClassifier):
 
     References
     ----------
-        [1] N. V. Chawla, A. Lazarevic, L. O. Hall, and K. W. Bowyer. 
-            "SMOTEBoost: Improving Prediction of the Minority Class in 
-            Boosting." European Conference on Principles of Data Mining and 
-            Knowledge Discovery (PKDD), 2003.
+    .. [1] N. V. Chawla, A. Lazarevic, L. O. Hall, and K. W. Bowyer. 
+           "SMOTEBoost: Improving Prediction of the Minority Class in 
+           Boosting." European Conference on Principles of Data Mining and 
+           Knowledge Discovery (PKDD), 2003.
     """
     def __init__(self,
                  n_samples=100,

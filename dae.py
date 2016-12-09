@@ -178,6 +178,13 @@ def gaussian_noise(X, std=1.0):
 class DAE(object):
     """Denoising Autoencoder (DAE) implemented using TensorFlow.
 
+    The DAE is an extension of the classical autoencoder takes as input a 
+    partially corrupted and uses training to recover and reconstruct the 
+    original undistorted input [1]. Pseudo-Gibbs sampling is used to generate 
+    samples, with walkback training [2].
+
+    The DAE has been generalized to address oversampling problems [3] [4].
+
     Parameters
     ----------
     num_epochs : int
@@ -209,26 +216,23 @@ class DAE(object):
 
     References
     ----------
-    See the original paper for more details:
-        [1] P. Vincent, H. Larochelle, I. Lajoie, Y. Bengio, and P.-A. Manzagol. 
-            "Stacked Denoising Autoencoders: Learning Useful Representations in 
-            a Deep Network with a Local Denoising Criterion". Journal of 
-            Machine Learning Research (JMLR), 2010.
+    .. [1] P. Vincent, H. Larochelle, I. Lajoie, Y. Bengio, and P.-A. Manzagol. 
+           "Stacked Denoising Autoencoders: Learning Useful Representations in 
+           a Deep Network with a Local Denoising Criterion". Journal of 
+           Machine Learning Research (JMLR), 2010.
 
-    Implements pseudo-Gibbs sampling and walkback training based on:
-        [2] Y. Bengio, L. Yao, G. Alain, and P. Vincent. "Generalized Denoising 
-            Auto-Encoders as Generative Models". Advances in Neural Information 
-            Processing Systems 26 (NIPS), 2013.
+    .. [2] Y. Bengio, L. Yao, G. Alain, and P. Vincent. "Generalized Denoising 
+           Auto-Encoders as Generative Models". Advances in Neural Information 
+           Processing Systems 26 (NIPS), 2013.
 
-    Generalized to oversampling problems based on the following work:
-        [3] C. Bellinger, C. Drummond, and N. Japkowicz. "Beyond the 
-            Boundaries of SMOTE". Joint European Conference on Machine Learning 
-            and Knowledge Discovery in Databases (ECML-PKDD), 2016.
+    .. [3] C. Bellinger, C. Drummond, and N. Japkowicz. "Beyond the Boundaries 
+           of SMOTE". Joint European Conference on Machine Learning and 
+           Knowledge Discovery in Databases (ECML-PKDD), 2016.
 
-        [4] C. Bellinger, N. Japkowicz, and C. Drummond. "Synthetic 
-            Oversampling for Advanced Radioactive Threat Detection". IEEE 14th 
-            International Conference on Machine Learning and Applications 
-            (ICMLA), 2015.
+    .. [4] C. Bellinger, N. Japkowicz, and C. Drummond. "Synthetic 
+           Oversampling for Advanced Radioactive Threat Detection". IEEE 14th 
+           International Conference on Machine Learning and Applications 
+           (ICMLA), 2015.
 
     Notes
     -----

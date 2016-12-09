@@ -97,10 +97,10 @@ class RUSBoost(AdaBoostClassifier):
 
     References
     ----------
-        [1] C. Seiffert, T. M. Khoshgoftaar, J. V. Hulse, and A. Napolitano. 
-            "RUSBoost: Improving Classification Performance when Training Data 
-            is Skewed". International Conference on Pattern Recognition 
-            (ICPR), 2008.
+    .. [1] C. Seiffert, T. M. Khoshgoftaar, J. V. Hulse, and A. Napolitano. 
+           "RUSBoost: Improving Classification Performance when Training Data 
+           is Skewed". International Conference on Pattern Recognition 
+           (ICPR), 2008.
     """
     def __init__(self,
                  n_samples=100,

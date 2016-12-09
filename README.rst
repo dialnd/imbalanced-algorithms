@@ -3,9 +3,7 @@
 ND DIAL: Imbalanced Algorithms
 ==============================
 
-.. image:: http://i.imgur.com/NN4vi0n.png
-   :height 50 px
-   :scale: 25 %
+.. image:: https://github.com/dialnd/imbalanced-algorithms/blob/master/icensa_logo.png
 
 Algorithms for imbalanced learning, with a focus on using deep/representational learning. Below is a list of the methods currently implemented.
 

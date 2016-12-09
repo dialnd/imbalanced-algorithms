@@ -13,11 +13,14 @@ from sklearn.utils import shuffle
 class RandomUnderSampler(object):
     """Implementation of random undersampling.
 
-    Under-sample the majority class(es) by randomly picking samples with or 
+    Undersample the majority class(es) by randomly picking samples with or 
     without replacement.
 
     Parameters
     ----------
+    with_replacement : bool, optional (default=True)
+        Undersample with replacement.
+
     return_indices : bool, optional (default=False)
         Whether or not to return the indices of the samples randomly selected
         from the majority class.
@@ -27,7 +30,7 @@ class RandomUnderSampler(object):
         If None, the random number generator is the RandomState instance used
         by np.random.
     """
-    def __init__(self, return_indices=False, with_replacement=True, 
+    def __init__(self, with_replacement=True, return_indices=False, 
                  random_state=None):
         self.return_indices = return_indices
         self.with_replacement = with_replacement
@@ -81,8 +84,6 @@ class RUSBoost(AdaBoostClassifier):
 
     Parameters
     ----------
-    k_neighbors : int
-        Number of nearest neighbors.
     n_samples : int
         Number of new synthetic samples per boosting step.
     min_ratio : float
@@ -107,8 +108,8 @@ class RUSBoost(AdaBoostClassifier):
         self.algorithm = algorithm
         self.n_samples = n_samples
         self.min_ratio = min_ratio
-        self.rus = RandomUnderSampler(return_indices=True, 
-                                      with_replacement=with_replacement, 
+        self.rus = RandomUnderSampler(with_replacement=with_replacement, 
+                                      return_indices=True, 
                                       random_state=random_state)
 
         super(RUSBoost, self).__init__(

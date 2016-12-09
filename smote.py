@@ -107,8 +107,8 @@ class SMOTEBoost(AdaBoostClassifier):
             Knowledge Discovery (PKDD), 2003.
     """
     def __init__(self,
-                 k_neighbors=3,
                  n_samples=100,
+                 k_neighbors=3,
                  base_estimator=None,
                  n_estimators=50,
                  learning_rate=1.,
@@ -218,7 +218,7 @@ class SMOTEBoost(AdaBoostClassifier):
             sample_weight_syn = np.empty(X_syn.shape[0], dtype=np.float64)
             sample_weight_syn[:] = 1. / X.shape[0]
 
-            # Combine the original and synthetic instances.
+            # Combine the original and synthetic samples.
             X = np.vstack((X, X_syn))
             y = np.append(y, y_syn)
 

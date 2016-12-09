@@ -36,12 +36,12 @@ class SMOTE(object):
 
         Parameters
         ----------
-        N : int
+        n_samples : int
             Number new synthetic samples.
 
         Returns
         -------
-        S : array, shape = [N, n_features]
+        S : array, shape = [n_samples, n_features]
             Returns synthetic samples.
         """
         np.random.seed(seed=self.random_state)

@@ -63,18 +63,18 @@ class RandomUnderSampler(object):
         else:
             return self.X[idx]
 
-    def fit(self, X, majority_target=0):
+    def fit(self, X, minority_target=1):
         """Train model based on input data.
 
         Parameters
         ----------
         X : array-like, shape = [n_majority_samples, n_features]
             Holds the minority samples.
-        majority_target : int
-            Majority class label.
+        minority_target : int, optional (default=1)
+            Minority class label.
         """
         self.X = X
-        self.majority_target = majority_target
+        self.minority_target = minority_target
         self.n_majority_samples, self.n_features = self.X.shape
 
         return self
@@ -84,9 +84,9 @@ class RUSBoost(AdaBoostClassifier):
 
     Parameters
     ----------
-    n_samples : int
+    n_samples : int (default=100)
         Number of new synthetic samples per boosting step.
-    min_ratio : float
+    min_ratio : float (default=1.0)
         Minimum ratio of majority to minority class samples to generate.
     with_replacement : bool, optional (default=True)
         Undersample with replacement.

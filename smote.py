@@ -16,7 +16,7 @@ class SMOTE(object):
 
     Parameters
     ----------
-    k_neighbors : int
+    k_neighbors : int, optional (default=3)
         Number of nearest neighbors.
 
     References
@@ -76,7 +76,7 @@ class SMOTE(object):
         ----------
         X : array-like, shape = [n_minority_samples, n_features]
             Holds the minority samples.
-        minority_target : int
+        minority_target : int, optional (default=1)
             Minority class label.
         """
         self.X = X
@@ -94,10 +94,10 @@ class SMOTEBoost(AdaBoostClassifier):
 
     Parameters
     ----------
-    k_neighbors : int
-        Number of nearest neighbors.
-    n_samples : int
+    n_samples : int, optional (default=100)
         Number of new synthetic samples per boosting step.
+    k_neighbors : int, optional (default=3)
+        Number of nearest neighbors.
 
     References
     ----------

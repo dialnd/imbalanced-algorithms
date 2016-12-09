@@ -22,7 +22,6 @@ class SMOTE(object):
 
     References
     ----------
-    See the original paper for more details:
         [1] N. V. Chawla, K. W. Bowyer, L. O. Hall, and P. Kegelmeyer. "SMOTE: 
             Synthetic Minority Over-Sampling Technique." Journal of Artificial 
             Intelligence Research (JAIR), 2002.
@@ -97,7 +96,6 @@ class BorderlineSMOTE(object):
 
     References
     ----------
-    See the original paper for more details:
         [1] H. Han, W-Y Wang, and B-H Mao. "Borderline-SMOTE: A New 
             Over-Sampling Method in Imbalanced Data Sets Learning." 
             International Conference on Intelligent Computing (ICIC), 2005.

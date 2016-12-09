@@ -5,11 +5,13 @@ ND DIAL: Imbalanced Algorithms
 
 Algorithms for imbalanced learning, with a focus on using deep/representational learning. Below is a list of the methods currently implemented.
 
-* Oversampling
+* Undersampling
 	1. Random Majority Undersampling with/without Replacement
-    2. SMOTE - Synthetic Minority Over-sampling Technique [1]_
-    3. DAE - Denoising Autoencoder [2]_
-    4. VAE - Variational Autoencoder [3]_
+
+* Oversampling
+    1. SMOTE - Synthetic Minority Over-sampling Technique [1]_
+    2. DAE - Denoising Autoencoder [2]_
+    3. VAE - Variational Autoencoder [3]_
 
 * Ensemble Sampling
     1. RUSBoost [4]_

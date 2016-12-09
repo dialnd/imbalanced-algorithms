@@ -1,5 +1,5 @@
+import random
 from collections import Counter
-from random import choice
 
 import numpy as np
 from sklearn.base import is_regressor
@@ -44,6 +44,7 @@ class SMOTE(object):
         S : array, shape = [n_samples, n_features]
             Returns synthetic samples.
         """
+        random.seed(self.random_state)
         np.random.seed(seed=self.random_state)
 
         S = np.zeros(shape=(n_samples, self.n_features))
@@ -53,7 +54,7 @@ class SMOTE(object):
 
             # Exclude the sample itself.
             nn = self.neigh.kneighbors(self.X[j].reshape(1, -1), return_distance=False)[:, 1:]
-            nn_index = choice(nn[0])
+            nn_index = random.choice(nn[0])
 
             dif = self.X[nn_index] - self.X[j]
             gap = np.random.random()
@@ -125,8 +126,6 @@ class BorderlineSMOTE(object):
         danger : array, shape = [danger_minority_samples, n_features]
             Minority samples in the danger zone.
         """
-        np.random.seed(seed=self.random_state)
-
         safe_minority_indices = list()
         danger_minority_indices = list()
 
@@ -231,14 +230,14 @@ class SMOTEBoost(AdaBoostClassifier):
 
         self.algorithm = algorithm
 
-        self.smote = SMOTE(k_neighbors=k_neighbors, return_mode='only')
-        self.n_samples = n_samples
-
         super(SMOTEBoost, self).__init__(
             base_estimator=base_estimator,
             n_estimators=n_estimators,
             learning_rate=learning_rate,
             random_state=random_state)
+
+        self.smote = SMOTE(k_neighbors=k_neighbors, return_mode='only', random_state=self.random_state)
+        self.n_samples = n_samples
 
     def fit(self, X, y, sample_weight=None, minority_target=None):
         """Build a boosted classifier/regressor from the training set (X, y),
@@ -339,7 +338,7 @@ class SMOTEBoost(AdaBoostClassifier):
             sample_weight = np.append(sample_weight, sample_weight_syn).reshape(-1, 1)
             sample_weight = np.squeeze(normalize(sample_weight, axis=0, norm='l1'))
 
-            X, y, sample_weight = shuffle(X, y, sample_weight)
+            X, y, sample_weight = shuffle(X, y, sample_weight, random_state=random_state)
 
             # Boosting step.
             sample_weight, estimator_weight, estimator_error = self._boost(

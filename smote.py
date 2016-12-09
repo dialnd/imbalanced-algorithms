@@ -230,8 +230,8 @@ class SMOTEBoost(AdaBoostClassifier):
             sample_weight = \
                 np.squeeze(normalize(sample_weight, axis=0, norm='l1'))
 
-            X, y, sample_weight = shuffle(X, y, sample_weight, 
-                                          random_state=random_state)
+            #X, y, sample_weight = shuffle(X, y, sample_weight, 
+            #                              random_state=random_state)
 
             # Boosting step.
             sample_weight, estimator_weight, estimator_error = self._boost(

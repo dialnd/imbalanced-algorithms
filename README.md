@@ -1,4 +1,7 @@
-.. ND DIAL: Imbalanced Algorithms: https://github.com/dialnd/imbalanced-algorithms
+.. -*- mode: rst -*-
+
+ND DIAL: Imbalanced Algorithms
+==============================
 
 .. image:: https://github.com/dialnd/imbalanced-algorithms/blob/master/icensa_logo.png
 

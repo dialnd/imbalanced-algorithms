@@ -243,7 +243,7 @@ class SMOTEBoost(AdaBoostClassifier):
             learning_rate=learning_rate,
             random_state=random_state)
 
-    def fit(self, X, y, sample_weight=None):
+    def fit(self, X, y, sample_weight=None, minority_target=1):
         """Build a boosted classifier/regressor from the training set (X, y),
         performing SMOTE during each boosting step.
 
@@ -312,39 +312,37 @@ class SMOTEBoost(AdaBoostClassifier):
 
         random_state = check_random_state(self.random_state)
 
-        X_i = X
-        y_i = y
-        sample_weight_i = sample_weight
         for iboost in range(self.n_estimators):
             # SMOTE step.
-            self.smote.fit(X_i)
+            X_min = X[np.where(y == minority_target)]
+            self.smote.fit(X_min)
             X_syn = self.smote.sample(self.n_samples)
-            y_syn = np.full(X_syn.shape[0], fill_value=1, dtype=np.int64)
+            y_syn = np.full(X_syn.shape[0], fill_value=minority_target, dtype=np.int64)
 
             # Normalize the synthetic instance weights based on the original 
             # training set size.
             sample_weight_syn = np.empty(X_syn.shape[0], dtype=np.float64)
-            sample_weight_syn[:] = 1. / X_i.shape[0]
+            sample_weight_syn[:] = 1. / X.shape[0]
 
             # Combine the original and synthetic instances.
-            X_i = np.vstack((X_i, X_syn))
-            y_i = np.append(y_i, y_syn)
+            X = np.vstack((X, X_syn))
+            y = np.append(y, y_syn)
 
             # Combine the weights.
-            sample_weight_i = np.append(sample_weight_i, sample_weight_syn).reshape(-1, 1)
-            sample_weight_i = np.squeeze(normalize(sample_weight_i, axis=0, norm='l1'))
+            sample_weight = np.append(sample_weight, sample_weight_syn).reshape(-1, 1)
+            sample_weight = np.squeeze(normalize(sample_weight, axis=0, norm='l1'))
 
-            X_i, y_i, sample_weight_i = shuffle(X_i, y_i, sample_weight_i)
+            X, y, sample_weight = shuffle(X, y, sample_weight)
 
             # Boosting step.
-            sample_weight_i, estimator_weight, estimator_error = self._boost(
+            sample_weight, estimator_weight, estimator_error = self._boost(
                 iboost,
-                X_i, y_i,
-                sample_weight_i,
+                X, y,
+                sample_weight,
                 random_state)
 
             # Early termination.
-            if sample_weight_i is None:
+            if sample_weight is None:
                 break
 
             self.estimator_weights_[iboost] = estimator_weight
@@ -354,7 +352,7 @@ class SMOTEBoost(AdaBoostClassifier):
             if estimator_error == 0:
                 break
 
-            sample_weight_sum = np.sum(sample_weight_i)
+            sample_weight_sum = np.sum(sample_weight)
 
             # Stop if the sum of sample weights has become non-positive.
             if sample_weight_sum <= 0:
@@ -362,7 +360,7 @@ class SMOTEBoost(AdaBoostClassifier):
 
             if iboost < self.n_estimators - 1:
                 # Normalize.
-                sample_weight_i /= sample_weight_sum
+                sample_weight /= sample_weight_sum
 
         return self
 

@@ -7,7 +7,7 @@ Algorithms for imbalanced learning, with a focus on using deep/representational 
 
 * Oversampling
     1. SMOTE - Synthetic Minority Over-sampling Technique [1]_
-    2. BorderlineSMOTE [2]_
+    2. Borderline-SMOTE [2]_
     3. SMOTEBoost [3]_
     4. DAE - Denoising Autoencoder [4]_
     5. VAE - Variational Autoencoder [5]_

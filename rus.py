@@ -83,8 +83,8 @@ class RUSBoost(AdaBoostClassifier):
     """Implementation of RUSBoost.
 
     RUSBoost introduces data sampling into the AdaBoost algorithm by 
-    undersampling the majority class using random oversampling on each 
-    boosting iteration.
+    undersampling the majority class using random undersampling (with or 
+    without replacement) on each boosting iteration.
 
     Parameters
     ----------

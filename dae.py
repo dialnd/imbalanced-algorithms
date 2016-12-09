@@ -8,7 +8,6 @@ tf.set_random_seed(0)
 
 def init_xavier(fan, constant=1): 
     """Xavier initialization of network weights."""
-    # https://stackoverflow.com/questions/33640581/how-to-do-xavier-initialization-on-tensorflow
     fan_in, fan_out = fan[0], fan[1]
     low = -constant * np.sqrt(6.0 / (fan_in + fan_out)) 
     high = constant * np.sqrt(6.0 / (fan_in + fan_out))

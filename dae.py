@@ -178,10 +178,12 @@ def gaussian_noise(X, std=1.0):
 class DAE(object):
     """Denoising Autoencoder (DAE) implemented using TensorFlow.
 
-    The DAE is an extension of the classical autoencoder takes as input a 
-    partially corrupted and uses training to recover and reconstruct the 
-    original undistorted input [1]. Pseudo-Gibbs sampling is used to generate 
-    samples, with optional walkback training [2].
+    The DAE is an extension of the classical autoencoder that partially 
+    corrupts the input data and learns to reconstruct the original undistorted 
+    input [1].
+
+    This implementation uses pseudo-Gibbs sampling to generate samples, with 
+    optional walkback training [2].
 
     The DAE has been generalized to address oversampling problems [3] [4].
 

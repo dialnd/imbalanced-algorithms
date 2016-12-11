@@ -1,10 +1,8 @@
 import argparse
+import numbers
 
 import numpy as np
 import tensorflow as tf
-
-np.random.seed(0)
-tf.set_random_seed(0)
 
 def init_xavier(fan, constant=1): 
     """Xavier initialization of network weights."""
@@ -55,6 +53,10 @@ class VAE(object):
         Initialization function for biases.
     learning_rate : float
         Learning rate schedule for weight updates.
+    random_state : int or None, optional (default=None)
+        If int, random_state is the seed used by the random number generator. 
+        If None, the random number generator is the RandomState instance used
+        by np.random.
     log_every : int
         Print loss after this many steps.
 
@@ -70,7 +72,8 @@ class VAE(object):
     """
     def __init__(self, num_epochs, batch_size, hidden_dim, n_input, n_z, 
                  transfer_fct=tf.nn.sigmoid, W_init_fct=init_xavier, 
-                 b_init_fct=tf.zeros, learning_rate=0.001, log_every=None):
+                 b_init_fct=tf.zeros, learning_rate=0.001, random_state=None, 
+                 log_every=None):
         self.num_epochs = num_epochs
         self.batch_size = batch_size
 
@@ -86,6 +89,14 @@ class VAE(object):
         self.b_init_fct = b_init_fct
 
         self.learning_rate = learning_rate
+
+        if random_state is None or random_state is np.random:
+            self.random_state = np.random.mtrand._rand
+        elif isinstance(random_state, (numbers.Integral, np.integer)):
+            self.random_state = np.random.RandomState(random_state)
+        else:
+            self.random_state = np.random.mtrand._rand
+        tf.set_random_seed(random_state)
 
         self.log_every = log_every
 
@@ -116,6 +127,7 @@ class VAE(object):
 
         # Use the reparameterization trick to draw a sample, z, from the 
         # Gaussian distribution, with epsilon as an auxiliary noise variable.
+
         eps = tf.random_normal((self.batch_size, self.net_arch['n_z']), 0, 1, 
                                dtype=tf.float32)
         # z = mu + sigma * epsilon
@@ -246,7 +258,7 @@ class VAE(object):
         sample from the Gaussian distribution.
         """
         if z_mu is None:
-            z_mu = np.random.normal(size=(self.batch_size, self.net_arch['n_z']))
+            z_mu = self.random_state.normal(size=(self.batch_size, self.net_arch['n_z']))
             return self.sess.run(self.x_reconstr_mean, feed_dict={self.z: z_mu})
         else:
             z_mu = np.reshape(z_mu, (1, self.net_arch['n_z']))
@@ -284,7 +296,7 @@ class VAE(object):
             # save the graph variables and reinitialize the graph with z_mu of 
             # size `n_samples`.
             #samples[i] = self.generate()[0]
-            samples[i] = self.generate()[np.random.randint(self.batch_size, size=1)]
+            samples[i] = self.generate()[self.random_state.randint(self.batch_size, size=1)]
         return samples
 
     def partial_fit(self, X):
@@ -322,7 +334,7 @@ class VAE(object):
         for epoch in range(self.num_epochs):
             if shuffle:
                 indices = np.arange(len(X))
-                np.random.shuffle(indices)
+                self.random_state.shuffle(indices)
             avg_cost = 0.
             # Loop over all batches.
             start_idxs = range(0, len(X) - self.batch_size + 1, self.batch_size)
@@ -360,6 +372,7 @@ def main(data, n_samples, args):
                 args.W_init_fct,
                 args.b_init_fct,
                 args.learning_rate,
+                args.random_state,
                 args.log_every)
     model.fit(data)
     samples = model.sample(n_samples)
@@ -386,6 +399,8 @@ def parse_args():
                         help='Initialization function for biases.')
     parser.add_argument('--learning_rate', type=float, default=0.001,
                         help='Learning rate schedule for weight updates.')
+    parser.add_argument('--random_state', type=int, default=None,
+                        help='The seed used by the random number generator.')
     parser.add_argument('--log_every', type=int, default=10,
                         help='Print loss after this many steps.')
     return parser.parse_args()

@@ -23,6 +23,10 @@ class SMOTE(object):
     ----------
     k_neighbors : int, optional (default=5)
         Number of nearest neighbors.
+    random_state : int or None, optional (default=None)
+        If int, random_state is the seed used by the random number generator. 
+        If None, the random number generator is the RandomState instance used
+        by np.random.
 
     References
     ----------
@@ -98,6 +102,10 @@ class SMOTEBoost(AdaBoostClassifier):
         In case of perfect fit, the learning procedure is stopped early.
     k_neighbors : int, optional (default=5)
         Number of nearest neighbors.
+    random_state : int or None, optional (default=None)
+        If int, random_state is the seed used by the random number generator. 
+        If None, the random number generator is the RandomState instance used
+        by np.random.
 
     References
     ----------

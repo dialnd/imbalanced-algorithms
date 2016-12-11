@@ -148,6 +148,10 @@ class RAMOBoost(AdaBoostClassifier):
         instances.
     alpha : float, optional (default=0.3)
         Scaling coefficient.
+    random_state : int or None, optional (default=None)
+        If int, random_state is the seed used by the random number generator. 
+        If None, the random number generator is the RandomState instance used
+        by np.random.
 
     References
     ----------

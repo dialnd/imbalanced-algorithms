@@ -11,7 +11,7 @@ from sklearn.utils import check_X_y
 from sklearn.utils import shuffle
 
 class RandomUnderSampler(object):
-    """Implementation of random undersampling.
+    """Implementation of random undersampling (RUS).
 
     Undersample the majority class(es) by randomly picking samples with or 
     without replacement.

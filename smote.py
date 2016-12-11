@@ -16,7 +16,7 @@ class SMOTE(object):
 
     Parameters
     ----------
-    k_neighbors : int, optional (default=3)
+    k_neighbors : int, optional (default=5)
         Number of nearest neighbors.
 
     References
@@ -25,9 +25,8 @@ class SMOTE(object):
            Synthetic Minority Over-Sampling Technique." Journal of Artificial 
            Intelligence Research (JAIR), 2002.
     """
-    def __init__(self, k_neighbors=3, return_mode='only', random_state=None):
+    def __init__(self, k_neighbors=5, random_state=None):
         self.k = k_neighbors
-        self.return_mode = return_mode
         self.random_state = random_state
 
     def sample(self, n_samples):
@@ -60,27 +59,17 @@ class SMOTE(object):
 
             S[i, :] = self.X[j, :] + gap * dif[:]
 
-        if self.return_mode == 'append':
-            X = np.vstack((self.X, S))
-            y = np.full(X.shape[0], fill_value=self.minority_target)
-            return (X, y)
-        elif self.return_mode == 'only':
-            return S
-        else:
-            pass
+        return S
 
-    def fit(self, X, minority_target=1):
+    def fit(self, X):
         """Train model based on input data.
 
         Parameters
         ----------
         X : array-like, shape = [n_minority_samples, n_features]
             Holds the minority samples.
-        minority_target : int, optional (default=1)
-            Minority class label.
         """
         self.X = X
-        self.minority_target = minority_target
         self.n_minority_samples, self.n_features = self.X.shape
 
         # Learn nearest neighbors.
@@ -99,7 +88,10 @@ class SMOTEBoost(AdaBoostClassifier):
     ----------
     n_samples : int, optional (default=100)
         Number of new synthetic samples per boosting step.
-    k_neighbors : int, optional (default=3)
+    n_estimators : int, optional (default=50)
+        The maximum number of estimators at which boosting is terminated.
+        In case of perfect fit, the learning procedure is stopped early.
+    k_neighbors : int, optional (default=5)
         Number of nearest neighbors.
 
     References
@@ -111,16 +103,16 @@ class SMOTEBoost(AdaBoostClassifier):
     """
     def __init__(self,
                  n_samples=100,
-                 k_neighbors=3,
-                 base_estimator=None,
                  n_estimators=50,
+                 k_neighbors=5,
+                 base_estimator=None,
                  learning_rate=1.,
                  algorithm='SAMME.R',
                  random_state=None):
 
         self.algorithm = algorithm
         self.n_samples = n_samples
-        self.smote = SMOTE(k_neighbors=k_neighbors, return_mode='only', 
+        self.smote = SMOTE(k_neighbors=k_neighbors, 
                            random_state=random_state)
 
         super(SMOTEBoost, self).__init__(
@@ -156,7 +148,7 @@ class SMOTEBoost(AdaBoostClassifier):
 
         Notes
         -----
-        Based on the scikit-learn v0.18 AdaBoostClassifier `fit` method.
+        Based on the scikit-learn v0.18 BaseWeightBoosting `fit` method.
         """
         # Check parameters.
         if self.learning_rate <= 0:

@@ -20,11 +20,9 @@ class RandomUnderSampler(object):
     ----------
     with_replacement : bool, optional (default=True)
         Undersample with replacement.
-
     return_indices : bool, optional (default=False)
         Whether or not to return the indices of the samples randomly selected
         from the majority class.
-
     random_state : int or None, optional (default=None)
         If int, random_state is the seed used by the random number generator. 
         If None, the random number generator is the RandomState instance used
@@ -63,18 +61,15 @@ class RandomUnderSampler(object):
         else:
             return self.X[idx]
 
-    def fit(self, X, minority_target=1):
+    def fit(self, X):
         """Train model based on input data.
 
         Parameters
         ----------
         X : array-like, shape = [n_majority_samples, n_features]
-            Holds the minority samples.
-        minority_target : int, optional (default=1)
-            Minority class label.
+            Holds the majority samples.
         """
         self.X = X
-        self.minority_target = minority_target
         self.n_majority_samples, self.n_features = self.X.shape
 
         return self
@@ -88,8 +83,11 @@ class RUSBoost(AdaBoostClassifier):
 
     Parameters
     ----------
-    n_samples : int (default=100)
+    n_samples : int, optional (default=100)
         Number of new synthetic samples per boosting step.
+    n_estimators : int, optional (default=50)
+        The maximum number of estimators at which boosting is terminated.
+        In case of perfect fit, the learning procedure is stopped early.
     min_ratio : float (default=1.0)
         Minimum ratio of majority to minority class samples to generate.
     with_replacement : bool, optional (default=True)
@@ -104,10 +102,10 @@ class RUSBoost(AdaBoostClassifier):
     """
     def __init__(self,
                  n_samples=100,
+                 n_estimators=50,
                  min_ratio=1.0,
                  with_replacement=True,
                  base_estimator=None,
-                 n_estimators=50,
                  learning_rate=1.,
                  algorithm='SAMME.R',
                  random_state=None):
@@ -152,7 +150,7 @@ class RUSBoost(AdaBoostClassifier):
 
         Notes
         -----
-        Based on the scikit-learn v0.18 AdaBoostClassifier `fit` method.
+        Based on the scikit-learn v0.18 BaseWeightBoosting `fit` method.
         """
         # Check parameters.
         if self.learning_rate <= 0:

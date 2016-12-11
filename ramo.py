@@ -141,10 +141,10 @@ class RAMOBoost(AdaBoostClassifier):
     n_estimators : int, optional (default=50)
         The maximum number of estimators at which boosting is terminated.
         In case of perfect fit, the learning procedure is stopped early.
-    k_neighbors_1 : int, optional (default=3)
+    k_neighbors_1 : int, optional (default=5)
         Number of nearest neighbors used to adjust the sampling probability of 
         the minority examples.
-    k_neighbors_2 : int, optional (default=3)
+    k_neighbors_2 : int, optional (default=5)
         Number of nearest neighbors used to generate the synthetic data 
         instances.
 
@@ -157,8 +157,8 @@ class RAMOBoost(AdaBoostClassifier):
     def __init__(self,
                  n_samples=100,
                  n_estimators=50,
-                 k_neighbors_1=3,
-                 k_neighbors_2=3,
+                 k_neighbors_1=5,
+                 k_neighbors_2=5,
                  base_estimator=None,
                  learning_rate=1.,
                  algorithm='SAMME.R',

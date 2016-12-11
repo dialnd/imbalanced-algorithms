@@ -146,6 +146,8 @@ class RAMOBoost(AdaBoostClassifier):
     k_neighbors_2 : int, optional (default=5)
         Number of nearest neighbors used to generate the synthetic data 
         instances.
+    alpha : float, optional (default=0.3)
+        Scaling coefficient.
 
     References
     ----------
@@ -158,6 +160,7 @@ class RAMOBoost(AdaBoostClassifier):
                  n_estimators=50,
                  k_neighbors_1=5,
                  k_neighbors_2=5,
+                 alpha=0.3,
                  base_estimator=None,
                  learning_rate=1.,
                  algorithm='SAMME.R',
@@ -165,8 +168,8 @@ class RAMOBoost(AdaBoostClassifier):
 
         self.algorithm = algorithm
         self.n_samples = n_samples
-        self.ramo = RankedMinorityOversampler(k_neighbors_1, k_neighbors_2,
-                                              random_state=random_state)
+        self.ramo = RankedMinorityOversampler(k_neighbors_1, k_neighbors_2, 
+                                              alpha, random_state=random_state)
 
         super(RAMOBoost, self).__init__(
             base_estimator=base_estimator,
@@ -256,7 +259,7 @@ class RAMOBoost(AdaBoostClassifier):
 
         for iboost in range(self.n_estimators):
             # RAMO step.
-            self.ramo.fit(X, y, sample_weight)
+            self.ramo.fit(X, y, sample_weight=sample_weight)
             X_syn = self.ramo.sample(self.n_samples)
             y_syn = np.full(X_syn.shape[0], fill_value=self.minority_target, 
                 dtype=np.int64)

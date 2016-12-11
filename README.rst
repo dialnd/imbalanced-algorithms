@@ -14,8 +14,9 @@ Algorithms for imbalanced learning, with a focus on using deep/representational 
     3. VAE - Variational Autoencoder [3]_
 
 * Ensemble Sampling
-    1. RUSBoost [4]_
-    2. SMOTEBoost [5]_
+    1. RAMOBoost [4]_
+    2. RUSBoost [5]_
+    3. SMOTEBoost [6]_
 
 References:
 -----------
@@ -26,6 +27,8 @@ References:
 
 .. [3] : D. P. Kingma and M. Welling. "Auto-Encoding Variational Bayes". arXiv preprint arXiv:1312.6114, 2013.
 
-.. [4] : C. Seiffert, T. M. Khoshgoftaar, J. V. Hulse, and A. Napolitano. "RUSBoost: Improving Classification Performance when Training Data is Skewed". International Conference on Pattern Recognition (ICPR), 2008.
+.. [4] : S. Chen, H. He, and E. A. Garcia. "RAMOBoost: Ranked Minority Oversampling in Boosting". IEEE Transactions on Neural Networks, 2010.
 
-.. [5] : N. V. Chawla, A. Lazarevic, L. O. Hall, and K. W. Bowyer. "SMOTEBoost: Improving Prediction of the Minority Class in Boosting." European Conference on Principles of Data Mining and Knowledge Discovery (PKDD), 2003.
+.. [5] : C. Seiffert, T. M. Khoshgoftaar, J. V. Hulse, and A. Napolitano. "RUSBoost: Improving Classification Performance when Training Data is Skewed". International Conference on Pattern Recognition (ICPR), 2008.
+
+.. [6] : N. V. Chawla, A. Lazarevic, L. O. Hall, and K. W. Bowyer. "SMOTEBoost: Improving Prediction of the Minority Class in Boosting." European Conference on Principles of Data Mining and Knowledge Discovery (PKDD), 2003.

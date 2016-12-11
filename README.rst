@@ -3,7 +3,7 @@
 ND DIAL: Imbalanced Algorithms
 ==============================
 
-Algorithms for imbalanced learning, with a focus on using deep/representational learning. Below is a list of the methods currently implemented.
+Minimalist Python-based implementations of algorithms for imbalanced learning. Includes deep and representational learning algorithms. Below is a list of the methods currently implemented.
 
 * Undersampling
 	1. Random Majority Undersampling with/without Replacement

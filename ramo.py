@@ -117,9 +117,8 @@ class RankedMinorityOversampler(object):
 
             self.r[i] = 1. / (1 + np.exp(-self.alpha * majority_neighbors))
 
-        self.r = self.r * sample_weight_min
-        self.r = \
-            np.squeeze(normalize(self.r.reshape(1, -1), axis=1, norm='l1'))
+        self.r = (self.r * sample_weight_min).reshape(1, -1)
+        self.r = np.squeeze(normalize(self.r, axis=1, norm='l1'))
 
         # Learn nearest neighbors.
         self.neigh_2 = NearestNeighbors(n_neighbors=self.k_neighbors_2+1)

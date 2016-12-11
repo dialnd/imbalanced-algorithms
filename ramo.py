@@ -257,15 +257,10 @@ class RAMOBoost(AdaBoostClassifier):
 
         for iboost in range(self.n_estimators):
             # RAMO step.
-            X_maj = X[y != self.minority_target]
-            X_min = X[y == self.minority_target]
             self.ramo.fit(X, y, sample_weight)
-
             X_syn = self.ramo.sample(self.n_samples)
-
             y_syn = np.full(X_syn.shape[0], fill_value=self.minority_target, 
                 dtype=np.int64)
-            y_min = y[np.where(y == self.minority_target)]
             
             # Combine the minority and majority class samples.
             X = np.vstack((X, X_syn))

@@ -14,6 +14,10 @@ from sklearn.utils import shuffle
 class SMOTE(object):
     """Implementation of Synthetic Minority Over-Sampling Technique (SMOTE).
 
+    SMOTE generates new, synthetic samples by taking minority class samples 
+    and their nearest neighbors, and generating new samples that combine 
+    features of the target sample with features of its neighbors [1].
+
     Parameters
     ----------
     k_neighbors : int, optional (default=5)
@@ -82,7 +86,7 @@ class SMOTEBoost(AdaBoostClassifier):
     """Implementation of SMOTEBoost.
 
     SMOTEBoost introduces data sampling into the AdaBoost algorithm by 
-    oversampling the minority class using SMOTE on each boosting iteration.
+    oversampling the minority class using SMOTE on each boosting iteration [1].
 
     Parameters
     ----------

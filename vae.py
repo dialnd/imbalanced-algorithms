@@ -28,11 +28,11 @@ class VAE(object):
     """Variational Autoencoder (VAE) implemented using TensorFlow.
 
     The VAE learns a directed probabilistic model of input data represented by 
-    continuous latent variables, using a neural network to perform efficient
+    continuous latent variables, using a neural network to perform efficient 
     approximate posterior inference [1].
 
     This implementation uses probabilistic encoders and decoders using Gaussian 
-    distributions realized by multi-layer perceptrons. The VAE can be learned
+    distributions realized by multilayer perceptrons. The VAE can be learned 
     end-to-end.
 
     Parameters

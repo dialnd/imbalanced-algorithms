@@ -131,7 +131,7 @@ class RAMOBoost(AdaBoostClassifier):
 
     RAMOBoost introduces data sampling into the AdaBoost algorithm by 
     oversampling the minority class according to a specified sampling 
-    distribution on each boosting iteration.
+    distribution on each boosting iteration [1].
 
     Parameters
     ----------

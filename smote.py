@@ -14,10 +14,10 @@ from sklearn.utils import shuffle
 class SMOTE(object):
     """Implementation of Synthetic Minority Over-Sampling Technique (SMOTE).
 
-    SMOTE generates new, synthetic samples by taking minority class samples 
-    and their nearest minority class neighbors, and oversamples the minority 
-    class by generating new samples that combine features of each target 
-    sample with features of its neighbors [1].
+    SMOTE generates new, synthetic samples by picking target minority class 
+    samples and their nearest minority class neighbors, and oversamples the 
+    minority class by generating new samples that combine features of each 
+    target sample with features of its neighbors [1].
 
     Parameters
     ----------

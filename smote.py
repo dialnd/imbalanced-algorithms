@@ -15,8 +15,9 @@ class SMOTE(object):
     """Implementation of Synthetic Minority Over-Sampling Technique (SMOTE).
 
     SMOTE generates new, synthetic samples by taking minority class samples 
-    and their nearest neighbors, and generating new samples that combine 
-    features of the target sample with features of its neighbors [1].
+    and their nearest minority class neighbors, and oversamples the minority 
+    class by generating new samples that combine features of each target 
+    sample with features of its neighbors [1].
 
     Parameters
     ----------

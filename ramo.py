@@ -211,7 +211,7 @@ class RAMOBoost(AdaBoostClassifier):
         Based on the scikit-learn v0.18 AdaBoostClassifier and 
         BaseWeightBoosting `fit` methods.
         """
-        # Check that algorithm is supported
+        # Check that algorithm is supported.
         if self.algorithm not in ('SAMME', 'SAMME.R'):
             raise ValueError("algorithm %s is not supported" % self.algorithm)
 

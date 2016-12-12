@@ -183,7 +183,7 @@ class DAE(object):
     This implementation uses pseudo-Gibbs sampling to generate samples, with 
     optional walkback training [2].
 
-    The DAE has been generalized to address oversampling problems [3] [4].
+    The DAE has been applied to oversampling problems [3] [4].
 
     Parameters
     ----------

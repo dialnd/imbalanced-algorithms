@@ -123,8 +123,8 @@ class SMOTEBoost(AdaBoostClassifier):
                  algorithm='SAMME.R',
                  random_state=None):
 
-        self.algorithm = algorithm
         self.n_samples = n_samples
+        self.algorithm = algorithm
         self.smote = SMOTE(k_neighbors=k_neighbors, 
                            random_state=random_state)
 
@@ -161,8 +161,13 @@ class SMOTEBoost(AdaBoostClassifier):
 
         Notes
         -----
-        Based on the scikit-learn v0.18 BaseWeightBoosting `fit` method.
+        Based on the scikit-learn v0.18 AdaBoostClassifier and 
+        BaseWeightBoosting `fit` methods.
         """
+        # Check that algorithm is supported
+        if self.algorithm not in ('SAMME', 'SAMME.R'):
+            raise ValueError("algorithm %s is not supported" % self.algorithm)
+
         # Check parameters.
         if self.learning_rate <= 0:
             raise ValueError("learning_rate must be greater than zero")

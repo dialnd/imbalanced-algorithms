@@ -320,7 +320,6 @@ class VAE(object):
         ----------
         X : ndarray, shape (n_samples, n_features)
             Matrix containing the data to be learned.
-        
 
         Returns
         -------

@@ -9,7 +9,7 @@ from sklearn.preprocessing import normalize
 from sklearn.tree.tree import BaseDecisionTree
 from sklearn.utils import check_random_state
 from sklearn.utils import check_X_y
-from sklearn.utils import shuffle
+#from sklearn.utils import shuffle
 
 
 class RankedMinorityOversampler(object):
@@ -62,6 +62,7 @@ class RankedMinorityOversampler(object):
             # Choose a sample according to the sampling distribution, r.
             j = np.random.choice(self.n_minority_samples, p=self.r)
 
+            # Find the NN for each sample.
             # Exclude the sample itself.
             nn = self.neigh_2.kneighbors(self.X_min[j].reshape(1, -1),
                                          return_distance=False)[:, 1:]

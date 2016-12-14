@@ -9,7 +9,7 @@ from sklearn.preprocessing import normalize
 from sklearn.tree.tree import BaseDecisionTree
 from sklearn.utils import check_random_state
 from sklearn.utils import check_X_y
-from sklearn.utils import shuffle
+#from sklearn.utils import shuffle
 
 
 class SMOTE(object):
@@ -60,6 +60,7 @@ class SMOTE(object):
         for i in range(n_samples):
             j = np.random.randint(0, self.X.shape[0])
 
+            # Find the NN for each sample.
             # Exclude the sample itself.
             nn = self.neigh.kneighbors(self.X[j].reshape(1, -1),
                                        return_distance=False)[:, 1:]

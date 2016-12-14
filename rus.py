@@ -8,7 +8,7 @@ from sklearn.preprocessing import normalize
 from sklearn.tree.tree import BaseDecisionTree
 from sklearn.utils import check_random_state
 from sklearn.utils import check_X_y
-from sklearn.utils import shuffle
+#from sklearn.utils import shuffle
 
 
 class RandomUnderSampler(object):

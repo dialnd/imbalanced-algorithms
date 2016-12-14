@@ -247,10 +247,11 @@ class VAE(object):
         latent_loss = -0.5 * tf.reduce_mean(1 + self.z_log_sigma_sq
                                             - tf.square(self.z_mean)
                                             - tf.exp(self.z_log_sigma_sq), 1)
+        # Average the cost over the batch.
         self.cost = tf.reduce_mean(
             tf.add(
                 reconstr_loss,
-                latent_loss))  # average over batch
+                latent_loss)) 
         # Use ADAM optimizer.
         self.opt = tf.train.AdamOptimizer(
             learning_rate=self.learning_rate).minimize(

@@ -33,13 +33,8 @@ def lrelu(X, leak=0.2, name='lrelu'):
         return f1 * X + f2 * abs(X)
 
 
-def linear(
-        input_,
-        output_size,
-        scope=None,
-        stddev=0.5,
-        bias_start=0.0,
-        with_w=False):
+def linear(input_, output_size, scope=None, stddev=0.5, bias_start=0.0,
+           with_w=False):
     """Compute the linear dot product with the input and its weights plus bias.
 
     Parameters

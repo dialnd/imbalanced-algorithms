@@ -11,28 +11,30 @@ from sklearn.utils import check_random_state
 from sklearn.utils import check_X_y
 from sklearn.utils import shuffle
 
+
 class RankedMinorityOversampler(object):
     """Implementation of Ranked Minority Oversampling (RAMO).
 
-    Oversample the minority class by picking samples according to a 
+    Oversample the minority class by picking samples according to a
     specified sampling distribution.
 
     Parameters
     ----------
     k_neighbors_1 : int, optional (default=5)
-        Number of nearest neighbors used to adjust the sampling probability of 
+        Number of nearest neighbors used to adjust the sampling probability of
         the minority examples.
     k_neighbors_2 : int, optional (default=5)
-        Number of nearest neighbors used to generate the synthetic data 
+        Number of nearest neighbors used to generate the synthetic data
         instances.
     alpha : float, optional (default=0.3)
         Scaling coefficient.
     random_state : int or None, optional (default=None)
-        If int, random_state is the seed used by the random number generator. 
+        If int, random_state is the seed used by the random number generator.
         If None, the random number generator is the RandomState instance used
         by np.random.
     """
-    def __init__(self, k_neighbors_1=5, k_neighbors_2=5, alpha=0.3, 
+
+    def __init__(self, k_neighbors_1=5, k_neighbors_2=5, alpha=0.3,
                  random_state=None):
         self.k_neighbors_1 = k_neighbors_1
         self.k_neighbors_2 = k_neighbors_2
@@ -61,8 +63,8 @@ class RankedMinorityOversampler(object):
             j = np.random.choice(self.n_minority_samples, p=self.r)
 
             # Exclude the sample itself.
-            nn = self.neigh_2.kneighbors(self.X_min[j].reshape(1, -1), 
-                                       return_distance=False)[:, 1:]
+            nn = self.neigh_2.kneighbors(self.X_min[j].reshape(1, -1),
+                                         return_distance=False)[:, 1:]
             nn_index = np.random.choice(nn[0])
 
             dif = self.X_min[nn_index] - self.X_min[j]
@@ -85,7 +87,7 @@ class RankedMinorityOversampler(object):
             Sample weights multiplier. If None, the multiplier is 1.
         minority_target : int, optional (default=None)
             Minority class label.
-        """        
+        """
         if minority_target is None:
             # Determine the minority class label.
             stats_c_ = Counter(y)
@@ -98,7 +100,7 @@ class RankedMinorityOversampler(object):
         self.X_min = X[y == self.minority_target]
         self.n_minority_samples, self.n_features = self.X_min.shape
 
-        neigh_1 = NearestNeighbors(n_neighbors=self.k_neighbors_1+1)
+        neigh_1 = NearestNeighbors(n_neighbors=self.k_neighbors_1 + 1)
         neigh_1.fit(X)
         nn = neigh_1.kneighbors(self.X_min, return_distance=False)[:, 1:]
 
@@ -121,16 +123,17 @@ class RankedMinorityOversampler(object):
         self.r = np.squeeze(normalize(self.r, axis=1, norm='l1'))
 
         # Learn nearest neighbors.
-        self.neigh_2 = NearestNeighbors(n_neighbors=self.k_neighbors_2+1)
+        self.neigh_2 = NearestNeighbors(n_neighbors=self.k_neighbors_2 + 1)
         self.neigh_2.fit(self.X_min)
 
         return self
 
+
 class RAMOBoost(AdaBoostClassifier):
     """Implementation of RAMOBoost.
 
-    RAMOBoost introduces data sampling into the AdaBoost algorithm by 
-    oversampling the minority class according to a specified sampling 
+    RAMOBoost introduces data sampling into the AdaBoost algorithm by
+    oversampling the minority class according to a specified sampling
     distribution on each boosting iteration [1].
 
     Parameters
@@ -141,24 +144,25 @@ class RAMOBoost(AdaBoostClassifier):
         The maximum number of estimators at which boosting is terminated.
         In case of perfect fit, the learning procedure is stopped early.
     k_neighbors_1 : int, optional (default=5)
-        Number of nearest neighbors used to adjust the sampling probability of 
+        Number of nearest neighbors used to adjust the sampling probability of
         the minority examples.
     k_neighbors_2 : int, optional (default=5)
-        Number of nearest neighbors used to generate the synthetic data 
+        Number of nearest neighbors used to generate the synthetic data
         instances.
     alpha : float, optional (default=0.3)
         Scaling coefficient.
     random_state : int or None, optional (default=None)
-        If int, random_state is the seed used by the random number generator. 
+        If int, random_state is the seed used by the random number generator.
         If None, the random number generator is the RandomState instance used
         by np.random.
 
     References
     ----------
-    .. [1] S. Chen, H. He, and E. A. Garcia. "RAMOBoost: Ranked Minority 
-           Oversampling in Boosting". IEEE Transactions on Neural Networks, 
+    .. [1] S. Chen, H. He, and E. A. Garcia. "RAMOBoost: Ranked Minority
+           Oversampling in Boosting". IEEE Transactions on Neural Networks,
            2010.
     """
+
     def __init__(self,
                  n_samples=100,
                  n_estimators=50,
@@ -172,7 +176,7 @@ class RAMOBoost(AdaBoostClassifier):
 
         self.n_samples = n_samples
         self.algorithm = algorithm
-        self.ramo = RankedMinorityOversampler(k_neighbors_1, k_neighbors_2, 
+        self.ramo = RankedMinorityOversampler(k_neighbors_1, k_neighbors_2,
                                               alpha, random_state=random_state)
 
         super(RAMOBoost, self).__init__(
@@ -208,7 +212,7 @@ class RAMOBoost(AdaBoostClassifier):
 
         Notes
         -----
-        Based on the scikit-learn v0.18 AdaBoostClassifier and 
+        Based on the scikit-learn v0.18 AdaBoostClassifier and
         BaseWeightBoosting `fit` methods.
         """
         # Check that algorithm is supported.
@@ -222,7 +226,7 @@ class RAMOBoost(AdaBoostClassifier):
         if (self.base_estimator is None or
                 isinstance(self.base_estimator, (BaseDecisionTree,
                                                  BaseForest))):
-            DTYPE = np.float64 # from fast_dict.pxd
+            DTYPE = np.float64  # from fast_dict.pxd
             dtype = DTYPE
             accept_sparse = 'csc'
         else:
@@ -270,9 +274,9 @@ class RAMOBoost(AdaBoostClassifier):
             # RAMO step.
             self.ramo.fit(X, y, sample_weight=sample_weight)
             X_syn = self.ramo.sample(self.n_samples)
-            y_syn = np.full(X_syn.shape[0], fill_value=self.minority_target, 
-                dtype=np.int64)
-            
+            y_syn = np.full(X_syn.shape[0], fill_value=self.minority_target,
+                            dtype=np.int64)
+
             # Combine the minority and majority class samples.
             X = np.vstack((X, X_syn))
             y = np.append(y, y_syn)
@@ -287,7 +291,7 @@ class RAMOBoost(AdaBoostClassifier):
             sample_weight = \
                 np.squeeze(normalize(sample_weight, axis=0, norm='l1'))
 
-            #X, y, sample_weight = shuffle(X, y, sample_weight, 
+            # X, y, sample_weight = shuffle(X, y, sample_weight,
             #                              random_state=random_state)
 
             # Boosting step.

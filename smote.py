@@ -11,12 +11,13 @@ from sklearn.utils import check_random_state
 from sklearn.utils import check_X_y
 from sklearn.utils import shuffle
 
+
 class SMOTE(object):
     """Implementation of Synthetic Minority Over-Sampling Technique (SMOTE).
 
-    SMOTE generates new, synthetic samples by picking target minority class 
-    samples and their nearest minority class neighbors, and oversamples the 
-    minority class by generating new samples that combine features of each 
+    SMOTE generates new, synthetic samples by picking target minority class
+    samples and their nearest minority class neighbors, and oversamples the
+    minority class by generating new samples that combine features of each
     target sample with features of its neighbors [1].
 
     Parameters
@@ -24,16 +25,17 @@ class SMOTE(object):
     k_neighbors : int, optional (default=5)
         Number of nearest neighbors.
     random_state : int or None, optional (default=None)
-        If int, random_state is the seed used by the random number generator. 
+        If int, random_state is the seed used by the random number generator.
         If None, the random number generator is the RandomState instance used
         by np.random.
 
     References
     ----------
-    .. [1] N. V. Chawla, K. W. Bowyer, L. O. Hall, and P. Kegelmeyer. "SMOTE: 
-           Synthetic Minority Over-Sampling Technique." Journal of Artificial 
+    .. [1] N. V. Chawla, K. W. Bowyer, L. O. Hall, and P. Kegelmeyer. "SMOTE:
+           Synthetic Minority Over-Sampling Technique." Journal of Artificial
            Intelligence Research (JAIR), 2002.
     """
+
     def __init__(self, k_neighbors=5, random_state=None):
         self.k = k_neighbors
         self.random_state = random_state
@@ -59,7 +61,7 @@ class SMOTE(object):
             j = np.random.randint(0, self.X.shape[0])
 
             # Exclude the sample itself.
-            nn = self.neigh.kneighbors(self.X[j].reshape(1, -1), 
+            nn = self.neigh.kneighbors(self.X[j].reshape(1, -1),
                                        return_distance=False)[:, 1:]
             nn_index = np.random.choice(nn[0])
 
@@ -82,15 +84,16 @@ class SMOTE(object):
         self.n_minority_samples, self.n_features = self.X.shape
 
         # Learn nearest neighbors.
-        self.neigh = NearestNeighbors(n_neighbors=self.k+1)
+        self.neigh = NearestNeighbors(n_neighbors=self.k + 1)
         self.neigh.fit(self.X)
 
         return self
 
+
 class SMOTEBoost(AdaBoostClassifier):
     """Implementation of SMOTEBoost.
 
-    SMOTEBoost introduces data sampling into the AdaBoost algorithm by 
+    SMOTEBoost introduces data sampling into the AdaBoost algorithm by
     oversampling the minority class using SMOTE on each boosting iteration [1].
 
     Parameters
@@ -103,17 +106,18 @@ class SMOTEBoost(AdaBoostClassifier):
     k_neighbors : int, optional (default=5)
         Number of nearest neighbors.
     random_state : int or None, optional (default=None)
-        If int, random_state is the seed used by the random number generator. 
+        If int, random_state is the seed used by the random number generator.
         If None, the random number generator is the RandomState instance used
         by np.random.
 
     References
     ----------
-    .. [1] N. V. Chawla, A. Lazarevic, L. O. Hall, and K. W. Bowyer. 
-           "SMOTEBoost: Improving Prediction of the Minority Class in 
-           Boosting." European Conference on Principles of Data Mining and 
+    .. [1] N. V. Chawla, A. Lazarevic, L. O. Hall, and K. W. Bowyer.
+           "SMOTEBoost: Improving Prediction of the Minority Class in
+           Boosting." European Conference on Principles of Data Mining and
            Knowledge Discovery (PKDD), 2003.
     """
+
     def __init__(self,
                  n_samples=100,
                  n_estimators=50,
@@ -125,7 +129,7 @@ class SMOTEBoost(AdaBoostClassifier):
 
         self.n_samples = n_samples
         self.algorithm = algorithm
-        self.smote = SMOTE(k_neighbors=k_neighbors, 
+        self.smote = SMOTE(k_neighbors=k_neighbors,
                            random_state=random_state)
 
         super(SMOTEBoost, self).__init__(
@@ -161,7 +165,7 @@ class SMOTEBoost(AdaBoostClassifier):
 
         Notes
         -----
-        Based on the scikit-learn v0.18 AdaBoostClassifier and 
+        Based on the scikit-learn v0.18 AdaBoostClassifier and
         BaseWeightBoosting `fit` methods.
         """
         # Check that algorithm is supported.
@@ -175,7 +179,7 @@ class SMOTEBoost(AdaBoostClassifier):
         if (self.base_estimator is None or
                 isinstance(self.base_estimator, (BaseDecisionTree,
                                                  BaseForest))):
-            DTYPE = np.float64 # from fast_dict.pxd
+            DTYPE = np.float64  # from fast_dict.pxd
             dtype = DTYPE
             accept_sparse = 'csc'
         else:
@@ -224,7 +228,7 @@ class SMOTEBoost(AdaBoostClassifier):
             X_min = X[np.where(y == self.minority_target)]
             self.smote.fit(X_min)
             X_syn = self.smote.sample(self.n_samples)
-            y_syn = np.full(X_syn.shape[0], fill_value=self.minority_target, 
+            y_syn = np.full(X_syn.shape[0], fill_value=self.minority_target,
                             dtype=np.int64)
 
             # Normalize synthetic sample weights based on current training set.
@@ -241,7 +245,7 @@ class SMOTEBoost(AdaBoostClassifier):
             sample_weight = \
                 np.squeeze(normalize(sample_weight, axis=0, norm='l1'))
 
-            #X, y, sample_weight = shuffle(X, y, sample_weight, 
+            # X, y, sample_weight = shuffle(X, y, sample_weight,
             #                              random_state=random_state)
 
             # Boosting step.

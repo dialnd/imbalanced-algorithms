@@ -10,10 +10,11 @@ from sklearn.utils import check_random_state
 from sklearn.utils import check_X_y
 from sklearn.utils import shuffle
 
+
 class RandomUnderSampler(object):
     """Implementation of random undersampling (RUS).
 
-    Undersample the majority class(es) by randomly picking samples with or 
+    Undersample the majority class(es) by randomly picking samples with or
     without replacement.
 
     Parameters
@@ -24,11 +25,12 @@ class RandomUnderSampler(object):
         Whether or not to return the indices of the samples randomly selected
         from the majority class.
     random_state : int or None, optional (default=None)
-        If int, random_state is the seed used by the random number generator. 
+        If int, random_state is the seed used by the random number generator.
         If None, the random number generator is the RandomState instance used
         by np.random.
     """
-    def __init__(self, with_replacement=True, return_indices=False, 
+
+    def __init__(self, with_replacement=True, return_indices=False,
                  random_state=None):
         self.return_indices = return_indices
         self.with_replacement = with_replacement
@@ -52,8 +54,8 @@ class RandomUnderSampler(object):
         if self.n_majority_samples <= n_samples:
             n_samples = self.n_majority_samples
 
-        idx = np.random.choice(self.n_majority_samples, 
-                               size=self.n_majority_samples - n_samples, 
+        idx = np.random.choice(self.n_majority_samples,
+                               size=self.n_majority_samples - n_samples,
                                replace=self.with_replacement)
 
         if self.return_indices:
@@ -74,11 +76,12 @@ class RandomUnderSampler(object):
 
         return self
 
+
 class RUSBoost(AdaBoostClassifier):
     """Implementation of RUSBoost.
 
-    RUSBoost introduces data sampling into the AdaBoost algorithm by 
-    undersampling the majority class using random undersampling (with or 
+    RUSBoost introduces data sampling into the AdaBoost algorithm by
+    undersampling the majority class using random undersampling (with or
     without replacement) on each boosting iteration [1].
 
     Parameters
@@ -95,11 +98,12 @@ class RUSBoost(AdaBoostClassifier):
 
     References
     ----------
-    .. [1] C. Seiffert, T. M. Khoshgoftaar, J. V. Hulse, and A. Napolitano. 
-           "RUSBoost: Improving Classification Performance when Training Data 
-           is Skewed". International Conference on Pattern Recognition 
+    .. [1] C. Seiffert, T. M. Khoshgoftaar, J. V. Hulse, and A. Napolitano.
+           "RUSBoost: Improving Classification Performance when Training Data
+           is Skewed". International Conference on Pattern Recognition
            (ICPR), 2008.
     """
+
     def __init__(self,
                  n_samples=100,
                  n_estimators=50,
@@ -113,8 +117,8 @@ class RUSBoost(AdaBoostClassifier):
         self.n_samples = n_samples
         self.min_ratio = min_ratio
         self.algorithm = algorithm
-        self.rus = RandomUnderSampler(with_replacement=with_replacement, 
-                                      return_indices=True, 
+        self.rus = RandomUnderSampler(with_replacement=with_replacement,
+                                      return_indices=True,
                                       random_state=random_state)
 
         super(RUSBoost, self).__init__(
@@ -150,7 +154,7 @@ class RUSBoost(AdaBoostClassifier):
 
         Notes
         -----
-        Based on the scikit-learn v0.18 AdaBoostClassifier and 
+        Based on the scikit-learn v0.18 AdaBoostClassifier and
         BaseWeightBoosting `fit` methods.
         """
         # Check that algorithm is supported.
@@ -164,7 +168,7 @@ class RUSBoost(AdaBoostClassifier):
         if (self.base_estimator is None or
                 isinstance(self.base_estimator, (BaseDecisionTree,
                                                  BaseForest))):
-            DTYPE = np.float64 # from fast_dict.pxd
+            DTYPE = np.float64  # from fast_dict.pxd
             dtype = DTYPE
             accept_sparse = 'csc'
         else:
@@ -227,7 +231,7 @@ class RUSBoost(AdaBoostClassifier):
                 sample_weight[np.where(y != self.minority_target)][X_idx]
             sample_weight_min = \
                 sample_weight[np.where(y == self.minority_target)]
-            
+
             # Combine the minority and majority class samples.
             X = np.vstack((X_rus, X_min))
             y = np.append(y_rus, y_min)
@@ -238,7 +242,7 @@ class RUSBoost(AdaBoostClassifier):
             sample_weight = \
                 np.squeeze(normalize(sample_weight, axis=0, norm='l1'))
 
-            #X, y, sample_weight = shuffle(X, y, sample_weight, 
+            # X, y, sample_weight = shuffle(X, y, sample_weight,
             #                              random_state=random_state)
 
             # Boosting step.

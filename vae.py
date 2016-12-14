@@ -516,8 +516,8 @@ def test_mnist():
 
     fig, ax = plt.subplots(40, 10, figsize=(10, 40))
     for i in range(400):
-        ax[i / 10][i %
-                   10].imshow(np.reshape(samples[i], (28, 28)), cmap='gray')
+        ax[i / 10][i % 10].imshow(np.reshape(samples[i], (28, 28)), 
+                                  cmap='gray')
         ax[i / 10][i % 10].axis('off')
     # plt.show()
     plt.savefig('vae_2d_mnist_samples.png')

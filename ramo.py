@@ -15,8 +15,8 @@ from sklearn.utils import check_X_y
 class RankedMinorityOversampler(object):
     """Implementation of Ranked Minority Oversampling (RAMO).
 
-    Oversample the minority class by picking samples according to a
-    specified sampling distribution.
+    Oversample the minority class by picking samples according to a specified
+    sampling distribution.
 
     Parameters
     ----------

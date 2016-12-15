@@ -153,6 +153,8 @@ class VAE(object):
 
         Parameters
         ----------
+        layer_input : Tensor
+            Input to the initial layer.
         layer_dim : list
             Number of neurons for each layer of the recognition network.
 
@@ -196,6 +198,8 @@ class VAE(object):
 
         Parameters
         ----------
+        layer_input : Tensor
+            Input to the initial layer.
         layer_dim : list
             Number of neurons for each layer of the generator network.
 

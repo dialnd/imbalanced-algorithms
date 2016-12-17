@@ -46,7 +46,7 @@ class SMOTE(object):
         Parameters
         ----------
         n_samples : int
-            Number new synthetic samples.
+            Number of new synthetic samples.
 
         Returns
         -------

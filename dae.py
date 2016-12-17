@@ -25,42 +25,6 @@ def binary_crossentropy(output, target, offset=1e-10):
                           + (1 - target) * tf.log(1 - output_), 1)
 
 
-def lrelu(X, leak=0.2, name='lrelu'):
-    """Leaky rectified linear unit (LReLU)."""
-    with tf.variable_scope(name):
-        f1 = 0.5 * (1 + leak)
-        f2 = 0.5 * (1 - leak)
-        return f1 * X + f2 * abs(X)
-
-
-def linear(input_, output_size, scope=None, stddev=0.5, bias_start=0.0,
-           with_w=False):
-    """Compute the linear dot product with the input and its weights plus bias.
-
-    Parameters
-    ----------
-    input_ : Tensor
-        Tensor on which to apply dot product.
-    output_size : int
-        Number of outputs.
-
-    Returns
-    -------
-    Tensor
-        Linear dot product.
-    """
-    shape = input_.get_shape().as_list()
-    with tf.variable_scope(scope or 'Linear'):
-        matrix = tf.get_variable('Matrix', [shape[1], output_size], tf.float32,
-                                 tf.random_normal_initializer(stddev=stddev))
-        bias = tf.get_variable('bias', [output_size],
-                               initializer=tf.constant_initializer(bias_start))
-        if with_w:
-            return tf.matmul(input_, matrix) + bias, matrix, bias
-        else:
-            return tf.matmul(input_, matrix) + bias
-
-
 def dropout(X, p=0.5):
     """Dropout function.
 

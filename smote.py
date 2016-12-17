@@ -15,10 +15,10 @@ from sklearn.utils import check_X_y
 class SMOTE(object):
     """Implementation of Synthetic Minority Over-Sampling Technique (SMOTE).
 
-    SMOTE generates new, synthetic samples by picking target minority class
-    samples and their nearest minority class neighbors, and oversamples the
-    minority class by generating new samples that linearly combine features of
-    each target sample with features of its neighbors [1].
+    SMOTE performs oversampling of the minority class by picking target 
+    minority class samples and their nearest minority class neighbors and 
+    generating new samples that linearly combine features of each target 
+    sample with features of its selected minority class neighbors [1].
 
     Parameters
     ----------
@@ -97,6 +97,9 @@ class SMOTEBoost(AdaBoostClassifier):
     SMOTEBoost introduces data sampling into the AdaBoost algorithm by
     oversampling the minority class using SMOTE on each boosting iteration [1].
 
+    This implementation inherits methods from the scikit-learn 
+    AdaBoostClassifier class, only modifying the `fit` method.
+
     Parameters
     ----------
     n_samples : int, optional (default=100)
@@ -136,8 +139,8 @@ class SMOTEBoost(AdaBoostClassifier):
     def __init__(self,
                  n_samples=100,
                  k_neighbors=5,
-                 n_estimators=50,
                  base_estimator=None,
+                 n_estimators=50,
                  learning_rate=1.,
                  algorithm='SAMME.R',
                  random_state=None):

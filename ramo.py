@@ -137,6 +137,9 @@ class RAMOBoost(AdaBoostClassifier):
     oversampling the minority class according to a specified sampling
     distribution on each boosting iteration [1].
 
+    This implementation inherits methods from the scikit-learn 
+    AdaBoostClassifier class, only modifying the `fit` method.
+
     Parameters
     ----------
     n_samples : int, optional (default=100)

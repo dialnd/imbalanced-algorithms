@@ -84,6 +84,9 @@ class RUSBoost(AdaBoostClassifier):
     undersampling the majority class using random undersampling (with or
     without replacement) on each boosting iteration [1].
 
+    This implementation inherits methods from the scikit-learn 
+    AdaBoostClassifier class, only modifying the `fit` method.
+
     Parameters
     ----------
     n_samples : int, optional (default=100)

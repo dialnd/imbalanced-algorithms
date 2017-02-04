@@ -319,8 +319,6 @@ class RAMOBoost(AdaBoostClassifier):
                 sample_weight,
                 random_state)
 
-            #print('sw', sample_weight)
-
             # Early termination.
             if sample_weight is None:
                 break

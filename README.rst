@@ -10,9 +10,9 @@ Minimalist Python-based implementations of algorithms for imbalanced learning. I
 
 * Oversampling
     1. SMOTE - Synthetic Minority Over-sampling Technique [1]_
-    2. DAE - Denoising Autoencoder [2]_ (TensorFlow)
-    3. GAN - Generative Adversarial Network [3]_ (TensorFlow)
-    4. VAE - Variational Autoencoder [4]_ (TensorFlow)
+    2. DAE - Denoising Autoencoder [2]_ (_TensorFlow_)
+    3. GAN - Generative Adversarial Network [3]_ (_TensorFlow_)
+    4. VAE - Variational Autoencoder [4]_ (_TensorFlow_)
 
 * Ensemble Sampling
     1. RAMOBoost [5]_

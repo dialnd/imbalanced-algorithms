@@ -109,16 +109,16 @@ class VAE(object):
 
         # Create autoencoder network.
         self._create_network()
-        # Define loss function based variational upper-bound and corresponding
-        # optimizer.
+        # Define the loss function.
         self._create_loss_optimizer()
 
         # Initialize the TensorFlow variables.
-        init = tf.initialize_all_variables()
+        init = tf.global_variables_initializer()
 
         # Launch the session.
         self.sess = tf.InteractiveSession()
         self.sess.run(init)
+        self.saver = tf.train.Saver(tf.global_variables())
 
     def _create_network(self):
         """Initialize the autoencoder network weights and biases."""
@@ -137,7 +137,7 @@ class VAE(object):
                                dtype=tf.float32)
         # z = mu + sigma * epsilon
         self.z = tf.add(self.z_mean,
-                        tf.mul(tf.sqrt(tf.exp(self.z_log_sigma_sq)), eps))
+                        tf.multiply(tf.sqrt(tf.exp(self.z_log_sigma_sq)), eps))
 
         # Use generator to determine mean of Bernoulli distribution of
         # reconstructed input.
@@ -153,8 +153,6 @@ class VAE(object):
 
         Parameters
         ----------
-        layer_input : Tensor
-            Input to the initial layer.
         layer_dim : list
             Number of neurons for each layer of the recognition network.
 
@@ -198,8 +196,6 @@ class VAE(object):
 
         Parameters
         ----------
-        layer_input : Tensor
-            Input to the initial layer.
         layer_dim : list
             Number of neurons for each layer of the generator network.
 
@@ -251,11 +247,10 @@ class VAE(object):
         latent_loss = -0.5 * tf.reduce_mean(1 + self.z_log_sigma_sq
                                             - tf.square(self.z_mean)
                                             - tf.exp(self.z_log_sigma_sq), 1)
-        # Average the cost over the batch.
         self.cost = tf.reduce_mean(
             tf.add(
                 reconstr_loss,
-                latent_loss)) 
+                latent_loss))  # average over batch
         # Use ADAM optimizer.
         self.opt = tf.train.AdamOptimizer(
             learning_rate=self.learning_rate).minimize(
@@ -520,8 +515,8 @@ def test_mnist():
 
     fig, ax = plt.subplots(40, 10, figsize=(10, 40))
     for i in range(400):
-        ax[i / 10][i % 10].imshow(np.reshape(samples[i], (28, 28)), 
-                                  cmap='gray')
+        ax[i / 10][i %
+                   10].imshow(np.reshape(samples[i], (28, 28)), cmap='gray')
         ax[i / 10][i % 10].axis('off')
     # plt.show()
     plt.savefig('vae_2d_mnist_samples.png')

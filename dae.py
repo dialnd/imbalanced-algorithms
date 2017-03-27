@@ -25,6 +25,42 @@ def binary_crossentropy(output, target, offset=1e-10):
                           + (1 - target) * tf.log(1 - output_), 1)
 
 
+def lrelu(X, leak=0.2, name='lrelu'):
+    """Leaky rectified linear unit (LReLU)."""
+    with tf.variable_scope(name):
+        f1 = 0.5 * (1 + leak)
+        f2 = 0.5 * (1 - leak)
+        return f1 * X + f2 * abs(X)
+
+
+def linear(input_, output_size, scope=None, stddev=0.5, bias_start=0.0, 
+           with_w=False):
+    """Compute the linear dot product with the input and its weights plus bias.
+
+    Parameters
+    ----------
+    input_ : Tensor
+        Tensor on which to apply dot product.
+    output_size : int
+        Number of outputs.
+
+    Returns
+    -------
+    Tensor
+        Linear dot product.
+    """
+    shape = input_.get_shape().as_list()
+    with tf.variable_scope(scope or 'Linear'):
+        matrix = tf.get_variable('Matrix', [shape[1], output_size], tf.float32,
+                                 tf.random_normal_initializer(stddev=stddev))
+        bias = tf.get_variable('bias', [output_size],
+                               initializer=tf.constant_initializer(bias_start))
+        if with_w:
+            return tf.matmul(input_, matrix) + bias, matrix, bias
+        else:
+            return tf.matmul(input_, matrix) + bias
+
+
 def dropout(X, p=0.5):
     """Dropout function.
 
@@ -41,7 +77,7 @@ def dropout(X, p=0.5):
         Tensor with dropout applied.
     """
     noise = binomial(shape=tf.shape(X), p=p)
-    return tf.div(tf.mul(X, noise), p)
+    return tf.div(tf.multiply(X, noise), p)
 
 
 def binomial(shape=[1], p=0.5, dtype='float32'):
@@ -60,7 +96,7 @@ def binomial(shape=[1], p=0.5, dtype='float32'):
         Binomial distribution.
     """
     dist = tf.random_uniform(shape=shape, minval=0, maxval=1, dtype='float32')
-    return tf.select(
+    return tf.where(
         tf.less(
             dist, tf.fill(
                 shape, p)), tf.ones(
@@ -84,8 +120,8 @@ def binomial_vec(p_vec, shape=[1], dtype='float32'):
         Binomial distribution.
     """
     dist = tf.random_uniform(shape=shape, minval=0, maxval=1, dtype='float32')
-    return tf.select(tf.less(dist, p_vec), tf.ones(shape, dtype=dtype),
-                     tf.zeros(shape, dtype=dtype))
+    return tf.where(tf.less(dist, p_vec), tf.ones(shape, dtype=dtype),
+                    tf.zeros(shape, dtype=dtype))
 
 
 def salt_and_pepper_noise(X, rate=0.3):
@@ -108,8 +144,8 @@ def salt_and_pepper_noise(X, rate=0.3):
     a = binomial(shape=tf.shape(X), p=1 - rate)
     b = binomial(shape=tf.shape(X), p=0.5)
     z = tf.zeros(tf.shape(X), dtype='float32')
-    c = tf.select(tf.equal(a, z), b, z)
-    return tf.add(tf.mul(X, a), c)
+    c = tf.where(tf.equal(a, z), b, z)
+    return tf.add(tf.multiply(X, a), c)
 
 
 def masking_noise(X, rate=0.3):
@@ -129,7 +165,7 @@ def masking_noise(X, rate=0.3):
         Input tensor with `rate` fraction of values corrupted.
     """
     a = binomial(shape=tf.shape(X), p=1 - rate)
-    return tf.mul(X, a)
+    return tf.multiply(X, a)
 
 
 def gaussian_noise(X, std=1.0):
@@ -265,16 +301,16 @@ class DAE(object):
 
         # Create autoencoder network.
         self._create_network()
-        # Define loss function.
+        # Define the loss function.
         self._create_loss_optimizer()
 
         # Initialize the TensorFlow variables.
-        init = tf.initialize_all_variables()
+        init = tf.global_variables_initializer()
 
         # Launch the session.
         self.sess = tf.InteractiveSession()
         self.sess.run(init)
-        self.saver = tf.train.Saver(tf.all_variables())
+        self.saver = tf.train.Saver(tf.global_variables())
 
     def _create_network(self):
         """Create a denoising autoencoder network."""
@@ -289,8 +325,6 @@ class DAE(object):
 
         Parameters
         ----------
-        layer_input : Tensor
-            Input to the initial layer.
         layer_dim : list
             Number of neurons for each layer of the autoencoder.
 
@@ -630,8 +664,8 @@ def test_mnist():
 
     fig, ax = plt.subplots(40, 10, figsize=(10, 40))
     for i in range(400):
-        ax[i / 10][i % 10].imshow(np.reshape(samples[i], (28, 28)), 
-                                  cmap='gray')
+        ax[i / 10][i %
+                   10].imshow(np.reshape(samples[i], (28, 28)), cmap='gray')
         ax[i / 10][i % 10].axis('off')
     # plt.show()
     plt.savefig('dae_mnist_samples.png')

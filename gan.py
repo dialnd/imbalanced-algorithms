@@ -201,16 +201,16 @@ class GAN(object):
 
         # Create discriminator and generator networks.
         self._create_networks()
-        # Define loss function.
+        # Define the loss function.
         self._create_loss_optimizer()
 
         # Initialize the TensorFlow variables.
-        init = tf.initialize_all_variables()
+        init = tf.global_variables_initializer()
 
         # Launch the session.
         self.sess = tf.InteractiveSession()
         self.sess.run(init)
-        self.saver = tf.train.Saver(tf.all_variables())
+        self.saver = tf.train.Saver(tf.global_variables())
 
     def _generator(
             self,
@@ -328,19 +328,16 @@ class GAN(object):
         # discriminator predictions.
         self.loss_d_real = tf.reduce_mean(
             tf.nn.sigmoid_cross_entropy_with_logits(
-                self.D1, tf.ones_like(
-                    self.D1)))
+                labels=tf.ones_like(self.D1), logits=self.D1))
         self.loss_d_fake = tf.reduce_mean(
             tf.nn.sigmoid_cross_entropy_with_logits(
-                self.D2, tf.zeros_like(
-                    self.D2)))
+                labels=tf.zeros_like(self.D2), logits=self.D2))
 
         # Define the loss for the discriminator and generator networks.
         self.loss_d = tf.add(self.loss_d_real, self.loss_d_fake)
         self.loss_g = tf.reduce_mean(
             tf.nn.sigmoid_cross_entropy_with_logits(
-                self.D2, tf.ones_like(
-                    self.D2)))
+                labels=tf.ones_like(self.D2), logits=self.D2))
 
         t_vars = tf.trainable_variables()
         if self.d_pretrain:

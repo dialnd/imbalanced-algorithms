@@ -18,7 +18,7 @@ def init_xavier(fan, constant=1):
 def binary_crossentropy(preds, targets, offset=1e-10, name=None):
     """Computes binary cross entropy given `preds`.
 
-    For brevity, let `x = `, `z = targets`. The logistic loss is
+    For brevity, let `x = preds`, `z = targets`. The logistic loss is
         loss(x, z) = - sum_i (x[i] * log(z[i]) + (1 - x[i]) * log(1 - z[i]))
     """
     with ops.op_scope([preds, targets], name, 'bce_loss') as name:

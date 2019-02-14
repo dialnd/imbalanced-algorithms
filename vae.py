@@ -5,6 +5,32 @@ import numpy as np
 import tensorflow as tf
 
 
+def check_random_state(seed):
+    """Turn seed into a np.random.RandomState instance.
+
+    Parameters
+    ----------
+    seed : None or int or instance of RandomState
+        If seed is None, return the RandomState singleton used by np.random.
+        If seed is an int, return a new RandomState instance seeded with seed.
+        If seed is already a RandomState instance, return it.
+        Otherwise raise ValueError.
+
+    Notes
+    -----
+    This routine is from scikit-learn. See:
+    http://scikit-learn.org/stable/developers/utilities.html#validation-tools.
+    """
+    if seed is None or seed is np.random:
+        return np.random.mtrand._rand
+    if isinstance(seed, (numbers.Integral, np.integer)):
+        return np.random.RandomState(seed)
+    if isinstance(seed, np.random.RandomState):
+        return seed
+    raise ValueError("%r cannot be used to seed a numpy.random.RandomState"
+                     " instance" % seed)
+
+
 def init_xavier(fan, constant=1):
     """Xavier initialization of network weights."""
     fan_in, fan_out = fan[0], fan[1]
@@ -94,12 +120,7 @@ class VAE(object):
 
         self.learning_rate = learning_rate
 
-        if random_state is None or random_state is np.random:
-            self.random_state = np.random.mtrand._rand
-        elif isinstance(random_state, (numbers.Integral, np.integer)):
-            self.random_state = np.random.RandomState(random_state)
-        else:
-            self.random_state = np.random.mtrand._rand
+        self.random_state = check_random_state(random_state)
         tf.set_random_seed(random_state)
 
         self.log_every = log_every
@@ -136,8 +157,8 @@ class VAE(object):
         eps = tf.random_normal((self.batch_size, self.net_arch['n_z']), 0, 1,
                                dtype=tf.float32)
         # z = mu + sigma * epsilon
-        self.z = tf.add(self.z_mean,
-                        tf.multiply(tf.sqrt(tf.exp(self.z_log_sigma_sq)), eps))
+        self.z = tf.add(self.z_mean, tf.multiply(tf.sqrt(
+            tf.exp(self.z_log_sigma_sq)), eps))
 
         # Use generator to determine mean of Bernoulli distribution of
         # reconstructed input.
@@ -183,8 +204,8 @@ class VAE(object):
             [self.net_arch['n_z']], dtype=tf.float32))
 
         z_mean = tf.add(tf.matmul(layer_input, W_out_mean), b_out_mean)
-        z_log_sigma_sq = \
-            tf.add(tf.matmul(layer_input, W_out_log_sigma), b_out_log_sigma)
+        z_log_sigma_sq = tf.add(tf.matmul(
+            layer_input, W_out_log_sigma), b_out_log_sigma)
         return (z_mean, z_log_sigma_sq)
 
     def _generator_network(self, layer_input, layer_dim):
@@ -219,12 +240,8 @@ class VAE(object):
         b_out_mean = tf.Variable(self.b_init_fct(
             [self.net_arch['n_output']], dtype=tf.float32))
 
-        x_reconstr_mean = tf.nn.sigmoid(
-            tf.add(
-                tf.matmul(
-                    layer_input,
-                    W_out_mean),
-                b_out_mean))
+        x_reconstr_mean = tf.nn.sigmoid(tf.add(tf.matmul(
+            layer_input, W_out_mean), b_out_mean))
         return x_reconstr_mean
 
     def _create_loss_optimizer(self):
@@ -252,9 +269,8 @@ class VAE(object):
                 reconstr_loss,
                 latent_loss))  # average over batch
         # Use ADAM optimizer.
-        self.opt = tf.train.AdamOptimizer(
-            learning_rate=self.learning_rate).minimize(
-            self.cost)
+        opt = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
+        self.opt = opt.minimize(self.cost)
 
     def transform(self, X):
         """Transform data by mapping it into the latent space.
@@ -286,10 +302,8 @@ class VAE(object):
                     self.z: z_mu})
         else:
             z_mu = np.reshape(z_mu, (1, self.net_arch['n_z']))
-            return self.sess.run(
-                self.x_reconstr_mean, feed_dict={
-                    self.z: np.repeat(
-                        z_mu, self.batch_size, axis=0)})
+            z = np.repeat(z_mu, self.batch_size, axis=0)
+            return self.sess.run(self.x_reconstr_mean, feed_dict={self.z: z})
 
     def reconstruct(self, X):
         """Use VAE to reconstruct given data.
@@ -321,9 +335,8 @@ class VAE(object):
             # save the graph variables and reinitialize the graph with z_mu of
             # size `n_samples`.
             #samples[i] = self.generate()[0]
-            samples[i] = self.generate()[
-                self.random_state.randint(
-                    self.batch_size, size=1)]
+            samples[i] = self.generate()[self.random_state.randint(
+                self.batch_size, size=1)]
         return samples
 
     def partial_fit(self, X):
@@ -441,73 +454,84 @@ def test_mnist():
     import matplotlib as mpl
     mpl.use('Agg')
     import matplotlib.pyplot as plt
-    import tensorflow.examples.tutorials.mnist.input_data as input_data
 
-    mnist = input_data.read_data_sets('MNIST_data', one_hot=True)
-    n_samples = mnist.train.num_examples
+    mnist = tf.keras.datasets.mnist
 
-    x_sample_all, _ = mnist.train.next_batch(55000)
+    (X_train, y_train), (X_test, y_test) = mnist.load_data()
+
+    img_rows, img_cols = 28, 28
+    n_train = X_train.shape[0]
+    n_test = X_test.shape[0]
+
+    X_train = X_train.reshape((n_train, img_rows*img_cols))
+    X_test = X_test.reshape((n_test, img_rows*img_cols))
+
+    # Standardize.
+    X_train = X_train / 256.
+    X_test = X_test / 256.
+
+    # One-hot encode.
+    y_train = np.eye(10)[y_train]
+    y_test = np.eye(10)[y_test]
 
     vae = VAE(num_epochs=10,
               batch_size=100,
               hidden_dim=(512, 256),
               n_input=784,  # MNIST data input (img shape: 28*28)
-              n_z=64  # dimensionality of latent space
-              )
-    vae.fit(x_sample_all, display_step=1)
+              n_z=64)  # dimensionality of latent space
+    vae.fit(X_train, display_step=1)
 
-    x_sample = mnist.test.next_batch(100)[0]
-    x_reconstruct = vae.reconstruct(x_sample)
+    X_test_samples = X_test[:100]
+    X_reconstruct = vae.reconstruct(X_test_samples)
     vae.close()
 
     plt.figure(figsize=(8, 12))
     for i in range(5):
-        plt.subplot(5, 2, 2 * i + 1)
-        plt.imshow(x_sample[i].reshape(28, 28), vmin=0, vmax=1)
+        plt.subplot(5, 2, 2*i+1)
+        plt.imshow(X_test_samples[i].reshape(28, 28), vmin=0, vmax=1)
         plt.title("Test input")
         plt.colorbar()
-        plt.subplot(5, 2, 2 * i + 2)
-        plt.imshow(x_reconstruct[i].reshape(28, 28), vmin=0, vmax=1)
+        plt.subplot(5, 2, 2*i+2)
+        plt.imshow(X_reconstruct[i].reshape(28, 28), vmin=0, vmax=1)
         plt.title("Reconstruction")
         plt.colorbar()
     plt.tight_layout()
-    # plt.show()
+    #plt.show()
     plt.savefig('vae_mnist_rec.png')
 
     vae_2d = VAE(num_epochs=10,
                  batch_size=100,
                  hidden_dim=(512, 256),
                  n_input=784,  # MNIST data input (img shape: 28*28)
-                 n_z=2  # dimensionality of latent space
-                 )
+                 n_z=2)  # dimensionality of latent space
 
-    vae_2d.fit(x_sample_all, display_step=1)
-    x_sample, y_sample = mnist.test.next_batch(5000)
-    z_mu = vae_2d.transform(x_sample)
+    vae_2d.fit(X_train, display_step=1)
+    X_test_samples, y_test_samples = X_test[:5000], y_test[:5000]
+    z_mu = vae_2d.transform(X_test_samples)
 
     plt.figure(figsize=(8, 6))
-    plt.scatter(z_mu[:, 0], z_mu[:, 1], c=np.argmax(y_sample, 1))
+    plt.scatter(z_mu[:, 0], z_mu[:, 1], c=np.argmax(y_test_samples, 1))
     plt.colorbar()
-    # plt.show()
+    #plt.show()
     plt.savefig('vae_2d_mnist_zspace.png')
 
     nx = ny = 20
-    x_values = np.linspace(-3, 3, nx)
+    X_values = np.linspace(-3, 3, nx)
     y_values = np.linspace(-3, 3, ny)
 
     canvas = np.empty((28 * ny, 28 * nx))
-    for i, yi in enumerate(x_values):
+    for i, yi in enumerate(X_values):
         for j, xi in enumerate(y_values):
             z_mu = np.array([[xi, yi]])
-            x_mean = vae_2d.generate(z_mu)
-            canvas[(nx - i - 1) * 28:(nx - i) * 28, j *
-                   28:(j + 1) * 28] = x_mean[0].reshape(28, 28)
+            X_mean = vae_2d.generate(z_mu)
+            X_mean = X_mean[0].reshape(28, 28)
+            canvas[(nx-i-1)*28:(nx-i)*28, j*28:(j+1)*28] = X_mean
 
     plt.figure(figsize=(8, 10))
-    _, _ = np.meshgrid(x_values, y_values)
+    _, _ = np.meshgrid(X_values, y_values)
     plt.imshow(canvas, origin="upper")
     plt.tight_layout()
-    # plt.show()
+    #plt.show()
     plt.savefig('vae_2d_mnist_zspace_samples.png')
 
     samples = vae_2d.sample(400)
@@ -515,11 +539,11 @@ def test_mnist():
 
     fig, ax = plt.subplots(40, 10, figsize=(10, 40))
     for i in range(400):
-        ax[i / 10][i %
-                   10].imshow(np.reshape(samples[i], (28, 28)), cmap='gray')
-        ax[i / 10][i % 10].axis('off')
-    # plt.show()
+        ax[i/10][i%10].imshow(np.reshape(samples[i], (28, 28)), cmap='gray')
+        ax[i/10][i%10].axis('off')
+    #plt.show()
     plt.savefig('vae_2d_mnist_samples.png')
+
 
 if __name__ == '__main__':
     #main(data, 100, parse_args())

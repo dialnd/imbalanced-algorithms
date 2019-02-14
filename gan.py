@@ -5,6 +5,32 @@ import numpy as np
 import tensorflow as tf
 
 
+def check_random_state(seed):
+    """Turn seed into a np.random.RandomState instance.
+
+    Parameters
+    ----------
+    seed : None or int or instance of RandomState
+        If seed is None, return the RandomState singleton used by np.random.
+        If seed is an int, return a new RandomState instance seeded with seed.
+        If seed is already a RandomState instance, return it.
+        Otherwise raise ValueError.
+
+    Notes
+    -----
+    This routine is from scikit-learn. See:
+    http://scikit-learn.org/stable/developers/utilities.html#validation-tools.
+    """
+    if seed is None or seed is np.random:
+        return np.random.mtrand._rand
+    if isinstance(seed, (numbers.Integral, np.integer)):
+        return np.random.RandomState(seed)
+    if isinstance(seed, np.random.RandomState):
+        return seed
+    raise ValueError("%r cannot be used to seed a numpy.random.RandomState"
+                     " instance" % seed)
+
+
 def init_xavier(fan, constant=1):
     """Xavier initialization of network weights."""
     fan_in, fan_out = fan[0], fan[1]
@@ -185,12 +211,7 @@ class GAN(object):
         self.d_learning_rate = d_learning_rate
         self.g_learning_rate = g_learning_rate
 
-        if random_state is None or random_state is np.random:
-            self.random_state = np.random.mtrand._rand
-        elif isinstance(random_state, (numbers.Integral, np.integer)):
-            self.random_state = np.random.RandomState(random_state)
-        else:
-            self.random_state = np.random.mtrand._rand
+        self.random_state = check_random_state(random_state)
         tf.set_random_seed(random_state)
 
         self.log_every = log_every
@@ -212,13 +233,12 @@ class GAN(object):
         self.sess.run(init)
         self.saver = tf.train.Saver(tf.global_variables())
 
-    def _generator(
-            self,
-            layer_input,
-            layer_dim,
-            output_dim,
-            batch_norm=True,
-            stddev=0.5):
+    def _generator(self,
+                   layer_input,
+                   layer_dim,
+                   output_dim,
+                   batch_norm=True,
+                   stddev=0.5):
         """Define the generator network.
 
         Parameters
@@ -236,19 +256,15 @@ class GAN(object):
             if batch_norm:
                 layer_input = tf.contrib.layers.batch_norm(
                     layer_input, scope='G_{0}'.format(layer_i))
-            output = self.g_transfer_fct(
-                linear(
-                    layer_input,
-                    n_output,
-                    scope='G_{0}'.format(layer_i),
-                    stddev=stddev))
+            output = self.g_transfer_fct(linear(layer_input,
+                                                n_output,
+                                                scope='G_{0}'.format(layer_i),
+                                                stddev=stddev))
             layer_input = output
-        return tf.nn.tanh(
-            linear(
-                layer_input,
-                output_dim,
-                scope='G_final',
-                stddev=stddev))
+        return tf.nn.tanh(linear(layer_input,
+                                 output_dim,
+                                 scope='G_final',
+                                 stddev=stddev))
         # return tf.nn.relu(linear(layer_input, output_dim, scope='G_final',
         # stddev=stddev))
 
@@ -266,12 +282,10 @@ class GAN(object):
         one neuron for binary discrimination.
         """
         for layer_i, n_output in enumerate(layer_dim):
-            output = self.d_transfer_fct(
-                linear(
-                    layer_input,
-                    n_output,
-                    scope='D_{0}'.format(layer_i),
-                    stddev=stddev))
+            output = self.d_transfer_fct(linear(layer_input,
+                                                n_output,
+                                                scope='D_{0}'.format(layer_i),
+                                                stddev=stddev))
             layer_input = output
         # return tf.nn.sigmoid(linear(layer_input, 1, scope='D_final'))
         return lrelu(linear(layer_input, 1, scope='D_final', stddev=stddev))
@@ -291,31 +305,28 @@ class GAN(object):
                     self.batch_size, self.net_arch['n_input']))
                 self.pre_labels = tf.placeholder(tf.float32, shape=(
                     self.batch_size, self.net_arch['n_input']))
-                D_pre = self._discriminator(
-                    self.pre_input,
-                    self.net_arch['d_hidden_dim'],
-                    stddev=self.stddev)
+                D_pre = self._discriminator(self.pre_input,
+                                            self.net_arch['d_hidden_dim'],
+                                            stddev=self.stddev)
                 self.pre_loss = tf.reduce_mean(
                     tf.square(D_pre - self.pre_labels))
                 self.pre_opt = optimizer(self.pre_loss, None)
 
         # Define the generator network.
         with tf.variable_scope('G'):
-            self.z = tf.placeholder(
-                tf.float32, [
-                    None, self.net_arch['n_input']], name='z')
-            self.G = self._generator(
-                self.z,
-                self.net_arch['g_hidden_dim'],
-                self.net_arch['n_output'],
-                batch_norm=True,
-                stddev=self.stddev)
+            self.z = tf.placeholder(tf.float32,
+                                    [None, self.net_arch['n_input']],
+                                    name='z')
+            self.G = self._generator(self.z,
+                                     self.net_arch['g_hidden_dim'],
+                                     self.net_arch['n_output'],
+                                     batch_norm=True,
+                                     stddev=self.stddev)
 
         # Define the discriminator network.
         with tf.variable_scope('D') as scope:
-            self.x = tf.placeholder(
-                tf.float32, [
-                    None, self.net_arch['n_output']], name='x')
+            self.x = tf.placeholder(tf.float32,
+                [None, self.net_arch['n_output']], name='x')
             self.D1 = self._discriminator(
                 self.x, self.net_arch['d_hidden_dim'], stddev=self.stddev)
             scope.reuse_variables()
@@ -341,18 +352,16 @@ class GAN(object):
 
         t_vars = tf.trainable_variables()
         if self.d_pretrain:
-            self.d_pre_vars = [
-                var for var in t_vars if var.name.startswith('D_pre/')]
+            self.d_pre_vars = [var for var in t_vars
+                               if var.name.startswith('D_pre/')]
         self.d_vars = [var for var in t_vars if var.name.startswith('D/')]
         self.g_vars = [var for var in t_vars if var.name.startswith('G/')]
 
         # Define optimizers for the discriminator and generator networks.
-        self.opt_d = tf.train.AdamOptimizer(
-            self.d_learning_rate, beta1=0.5).minimize(
-            self.loss_d, var_list=self.d_vars)
-        self.opt_g = tf.train.AdamOptimizer(
-            self.g_learning_rate, beta1=0.5).minimize(
-            self.loss_g, var_list=self.g_vars)
+        opt_d = tf.train.AdamOptimizer(self.d_learning_rate, beta1=0.5)
+        opt_g = tf.train.AdamOptimizer(self.g_learning_rate, beta1=0.5)
+        self.opt_d = opt_d.minimize(self.loss_d, var_list=self.d_vars)
+        self.opt_g = opt_g.minimize(self.loss_g, var_list=self.g_vars)
 
     def sample(self, n_samples):
         """Generate samples.
@@ -374,13 +383,10 @@ class GAN(object):
 
         samples = np.zeros((n_samples, self.z.get_shape()[1]))
         for i in range(n_samples // batch_size):
-            samples[batch_size * i:batch_size * (i + 1)] = \
-                self.sess.run(self.G,
-                              feed_dict={
-                                  self.z: np.reshape(
-                                      zs[batch_size * i:batch_size * (i + 1)],
-                                      (batch_size, self.z.get_shape()[1])
-                                  )})
+            z_batch = np.reshape(zs[batch_size * i:batch_size * (i+1)],
+                                 (batch_size, self.z.get_shape()[1]))
+            samples[batch_size * i:batch_size * (i+1)] = self.sess.run(
+                self.G, feed_dict={self.z: z_batch})
 
         return samples
 
@@ -427,7 +433,7 @@ class GAN(object):
             for step in xrange(num_pretrain_steps):
                 d = np.empty([self.batch_size, self.net_arch['n_input']])
                 for i in range(self.net_arch['n_input']):
-                    d[:, i] = (self.random_state.random(
+                    d[:, i] = (self.random_state.random_sample(
                         self.batch_size) - 0.5) * 10.0
                 labels = np.empty([self.batch_size, self.net_arch['n_input']])
                 for i in range(self.net_arch['n_input']):
@@ -435,9 +441,8 @@ class GAN(object):
                         low=0.0, high=1.0, size=d.shape[0])
                 pretrain_loss, _ = self.sess.run([self.pre_loss, self.pre_opt], {
                     self.pre_input: np.reshape(d, (self.batch_size, -1)),
-                    self.pre_labels: np.reshape(labels,
-                                                (self.batch_size,
-                                                    self.net_arch['n_input']))
+                    self.pre_labels: np.reshape(
+                        labels, (self.batch_size, self.net_arch['n_input']))
                 })
             self.weightsD = self.sess.run(self.d_pre_vars)
             # Copy the weights from pre-training over to the new discriminator
@@ -467,11 +472,11 @@ class GAN(object):
                 if display_step and epoch % display_step == 0:
                     print("Epoch: {:d}".format(epoch + 1),
                           "loss_d_real: {:.4f}".format(
-                        self.loss_d_real.eval({self.x: batch_x})),
-                        "loss_d_fake: {:.4f}".format(
-                        self.loss_d_fake.eval({self.z: batch_z})),
-                        "loss_g: {:.4f}".format(
-                        self.loss_g.eval({self.z: batch_z})))
+                              self.loss_d_real.eval({self.x: batch_x})),
+                          "loss_d_fake: {:.4f}".format(
+                              self.loss_d_fake.eval({self.z: batch_z})),
+                          "loss_g: {:.4f}".format(
+                              self.loss_g.eval({self.z: batch_z})))
 
         return self
 
@@ -548,32 +553,45 @@ def test_mnist():
     import matplotlib as mpl
     mpl.use('Agg')
     import matplotlib.pyplot as plt
-    import tensorflow.examples.tutorials.mnist.input_data as input_data
 
-    mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
-    n_samples = mnist.train.num_examples
+    mnist = tf.keras.datasets.mnist
 
-    x_sample_all, _ = mnist.train.next_batch(55000)
+    (X_train, y_train), (X_test, y_test) = mnist.load_data()
+
+    img_rows, img_cols = 28, 28
+    n_train = X_train.shape[0]
+    n_test = X_test.shape[0]
+
+    X_train = X_train.reshape((n_train, img_rows*img_cols))
+    X_test = X_test.reshape((n_test, img_rows*img_cols))
+
+    # Standardize.
+    X_train = X_train / 256.
+    X_test = X_test / 256.
+
+    # One-hot encode.
+    y_train = np.eye(10)[y_train]
+    y_test = np.eye(10)[y_test]
 
     gan = GAN(num_epochs=10,
               batch_size=100,
               d_hidden_dim=(512, 256),
               g_hidden_dim=(512, 256, 64),
               n_input=784,  # MNIST data input (img shape: 28*28)
-              stddev=0.01  # standard deviation for initialization noise
-              )
+              stddev=0.01,  # standard deviation for initialization noise
+              pretrain=False)
 
-    gan.fit(x_sample_all, display_step=1)
+    gan.fit(X_train, display_step=1)
     samples = gan.sample(400)
     gan.close()
 
     fig, ax = plt.subplots(40, 10, figsize=(10, 40))
     for i in range(400):
-        ax[i / 10][i %
-                   10].imshow(np.reshape(samples[i], (28, 28)), cmap='gray')
-        ax[i / 10][i % 10].axis('off')
-    # plt.show()
+        ax[i/10][i%10].imshow(np.reshape(samples[i], (28, 28)), cmap='gray')
+        ax[i/10][i%10].axis('off')
+    #plt.show()
     plt.savefig('gan_mnist_samples.png')
+
 
 if __name__ == '__main__':
     #main(data, 100, parse_args())

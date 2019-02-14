@@ -5,6 +5,32 @@ import numpy as np
 import tensorflow as tf
 
 
+def check_random_state(seed):
+    """Turn seed into a np.random.RandomState instance.
+
+    Parameters
+    ----------
+    seed : None or int or instance of RandomState
+        If seed is None, return the RandomState singleton used by np.random.
+        If seed is an int, return a new RandomState instance seeded with seed.
+        If seed is already a RandomState instance, return it.
+        Otherwise raise ValueError.
+
+    Notes
+    -----
+    This routine is from scikit-learn. See:
+    http://scikit-learn.org/stable/developers/utilities.html#validation-tools.
+    """
+    if seed is None or seed is np.random:
+        return np.random.mtrand._rand
+    if isinstance(seed, (numbers.Integral, np.integer)):
+        return np.random.RandomState(seed)
+    if isinstance(seed, np.random.RandomState):
+        return seed
+    raise ValueError("%r cannot be used to seed a numpy.random.RandomState"
+                     " instance" % seed)
+
+
 def init_xavier(fan, constant=1):
     """Xavier initialization of network weights."""
     fan_in, fan_out = fan[0], fan[1]
@@ -41,12 +67,9 @@ def binomial(shape=[1], p=0.5, dtype='float32'):
         Binomial distribution.
     """
     dist = tf.random_uniform(shape=shape, minval=0, maxval=1, dtype='float32')
-    return tf.where(
-        tf.less(
-            dist, tf.fill(
-                shape, p)), tf.ones(
-            shape, dtype=dtype), tf.zeros(
-                    shape, dtype=dtype))
+    return tf.where(tf.less(dist, tf.fill(shape, p)),
+                    tf.ones(shape, dtype=dtype),
+                    tf.zeros(shape, dtype=dtype))
 
 
 def binomial_vec(p_vec, shape=[1], dtype='float32'):
@@ -65,7 +88,8 @@ def binomial_vec(p_vec, shape=[1], dtype='float32'):
         Binomial distribution.
     """
     dist = tf.random_uniform(shape=shape, minval=0, maxval=1, dtype='float32')
-    return tf.where(tf.less(dist, p_vec), tf.ones(shape, dtype=dtype),
+    return tf.where(tf.less(dist, p_vec),
+                    tf.ones(shape, dtype=dtype),
                     tf.zeros(shape, dtype=dtype))
 
 
@@ -231,12 +255,7 @@ class DAE(object):
         self.b_init_fct = b_init_fct
         self.learning_rate = learning_rate
 
-        if random_state is None or random_state is np.random:
-            self.random_state = np.random.mtrand._rand
-        elif isinstance(random_state, (numbers.Integral, np.integer)):
-            self.random_state = np.random.RandomState(random_state)
-        else:
-            self.random_state = np.random.mtrand._rand
+        self.random_state = check_random_state(random_state)
         tf.set_random_seed(random_state)
 
         self.log_every = log_every
@@ -382,9 +401,8 @@ class DAE(object):
             self.cost = tf.reduce_mean(binary_crossentropy(self.y, self.x))
 
         # Use ADAM optimizer.
-        self.opt = tf.train.AdamOptimizer(
-            learning_rate=self.learning_rate).minimize(
-            self.cost)
+        opt = tf.train.AdamOptimizer(learning_rate=self.learning_rate)
+        self.opt = opt.minimize(self.cost)
 
     def transform(self, X):
         """Transform data by mapping it into the latent space.
@@ -565,16 +583,28 @@ def parse_args():
 
 # Test with MNIST.
 def test_mnist():
-    parse_args()
     import matplotlib as mpl
     mpl.use('Agg')
     import matplotlib.pyplot as plt
-    import tensorflow.examples.tutorials.mnist.input_data as input_data
 
-    mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
-    n_samples = mnist.train.num_examples
+    mnist = tf.keras.datasets.mnist
 
-    x_sample_all, _ = mnist.train.next_batch(55000)
+    (X_train, y_train), (X_test, y_test) = mnist.load_data()
+
+    img_rows, img_cols = 28, 28
+    n_train = X_train.shape[0]
+    n_test = X_test.shape[0]
+
+    X_train = X_train.reshape((n_train, img_rows*img_cols))
+    X_test = X_test.reshape((n_test, img_rows*img_cols))
+
+    # Standardize.
+    X_train = X_train / 256.
+    X_test = X_test / 256.
+
+    # One-hot encode.
+    y_train = np.eye(10)[y_train]
+    y_test = np.eye(10)[y_test]
 
     dae = DAE(num_epochs=10,
               batch_size=100,
@@ -582,38 +612,37 @@ def test_mnist():
               n_input=784,  # MNIST data input (img shape: 28*28)
               corrupt_type='salt_and_pepper',
               corrupt_prob=0.3,
-              walkbacks=0
-              )
+              walkbacks=0)
 
-    dae.fit(x_sample_all, display_step=1)
-    x_sample = mnist.test.next_batch(100)[0]
-    x_reconstruct = dae.reconstruct(x_sample)
+    dae.fit(X_train, display_step=1)
+    X_test_samples = X_test[:100]
+    X_test_reconstruct = dae.reconstruct(X_test_samples)
 
     plt.figure(figsize=(8, 12))
     for i in range(5):
-        plt.subplot(5, 2, 2 * i + 1)
-        plt.imshow(x_sample[i].reshape(28, 28), vmin=0, vmax=1)
+        plt.subplot(5, 2, 2*i+1)
+        plt.imshow(X_test_samples[i].reshape(28, 28), vmin=0, vmax=1)
         plt.title("Test input")
         plt.colorbar()
-        plt.subplot(5, 2, 2 * i + 2)
-        plt.imshow(x_reconstruct[i].reshape(28, 28), vmin=0, vmax=1)
+        plt.subplot(5, 2, 2*i+2)
+        plt.imshow(X_test_reconstruct[i].reshape(28, 28), vmin=0, vmax=1)
         plt.title("Reconstruction")
         plt.colorbar()
     plt.tight_layout()
-    # plt.show()
+    #plt.show()
     plt.savefig('dae_mnist_rec.png')
 
-    test_input = mnist.test.next_batch(1)[0]
+    test_input = X_test[101].reshape((1, -1))
     samples = dae.sample(test_input, 400)
     dae.close()
 
     fig, ax = plt.subplots(40, 10, figsize=(10, 40))
     for i in range(400):
-        ax[i / 10][i %
-                   10].imshow(np.reshape(samples[i], (28, 28)), cmap='gray')
-        ax[i / 10][i % 10].axis('off')
-    # plt.show()
+        ax[i/10][i%10].imshow(np.reshape(samples[i], (28, 28)), cmap='gray')
+        ax[i/10][i%10].axis('off')
+    #plt.show()
     plt.savefig('dae_mnist_samples.png')
+
 
 if __name__ == '__main__':
     #main(data, 100, parse_args())

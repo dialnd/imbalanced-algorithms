@@ -242,29 +242,31 @@ class SMOTEBoost(AdaBoostClassifier):
         random_state = check_random_state(self.random_state)
 
         for iboost in range(self.n_estimators):
-            # SMOTE step.
             X_min = X[np.where(y == self.minority_target)]
-            self.smote.fit(X_min)
-            X_syn = self.smote.sample(self.n_samples)
-            y_syn = np.full(X_syn.shape[0], fill_value=self.minority_target,
-                            dtype=np.int64)
 
-            # Normalize synthetic sample weights based on current training set.
-            sample_weight_syn = np.empty(X_syn.shape[0], dtype=np.float64)
-            sample_weight_syn[:] = 1. / X.shape[0]
+            # SMOTE step.
+            if len(X_min) >= self.smote.k:
+                self.smote.fit(X_min)
+                X_syn = self.smote.sample(self.n_samples)
+                y_syn = np.full(X_syn.shape[0], fill_value=self.minority_target,
+                                dtype=np.int64)
 
-            # Combine the original and synthetic samples.
-            X = np.vstack((X, X_syn))
-            y = np.append(y, y_syn)
+                # Normalize synthetic sample weights based on current training set.
+                sample_weight_syn = np.empty(X_syn.shape[0], dtype=np.float64)
+                sample_weight_syn[:] = 1. / X.shape[0]
 
-            # Combine the weights.
-            sample_weight = \
-                np.append(sample_weight, sample_weight_syn).reshape(-1, 1)
-            sample_weight = \
-                np.squeeze(normalize(sample_weight, axis=0, norm='l1'))
+                # Combine the original and synthetic samples.
+                X = np.vstack((X, X_syn))
+                y = np.append(y, y_syn)
 
-            # X, y, sample_weight = shuffle(X, y, sample_weight,
-            #                              random_state=random_state)
+                # Combine the weights.
+                sample_weight = \
+                    np.append(sample_weight, sample_weight_syn).reshape(-1, 1)
+                sample_weight = \
+                    np.squeeze(normalize(sample_weight, axis=0, norm='l1'))
+
+                # X, y, sample_weight = shuffle(X, y, sample_weight,
+                #                              random_state=random_state)
 
             # Boosting step.
             sample_weight, estimator_weight, estimator_error = self._boost(

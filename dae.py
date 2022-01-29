@@ -27,8 +27,10 @@ def check_random_state(seed):
         return np.random.RandomState(seed)
     if isinstance(seed, np.random.RandomState):
         return seed
-    raise ValueError("%r cannot be used to seed a numpy.random.RandomState"
-                     " instance" % seed)
+    raise ValueError(
+        "%r cannot be used to seed a numpy.random.RandomState"
+        " instance" % seed
+    )
 
 
 def init_xavier(fan, constant=1):
@@ -36,9 +38,9 @@ def init_xavier(fan, constant=1):
     fan_in, fan_out = fan[0], fan[1]
     low = -constant * np.sqrt(6.0 / (fan_in + fan_out))
     high = constant * np.sqrt(6.0 / (fan_in + fan_out))
-    return tf.random_uniform((fan_in, fan_out),
-                             minval=low, maxval=high,
-                             dtype=tf.float32)
+    return tf.random_uniform(
+        (fan_in, fan_out), minval=low, maxval=high, dtype=tf.float32
+    )
 
 
 def binary_crossentropy(output, target, offset=1e-10):
@@ -51,13 +53,14 @@ def binary_crossentropy(output, target, offset=1e-10):
                           + (1 - target) * tf.log(1 - output_), 1)
 
 
-def binomial(shape=[1], p=0.5, dtype='float32'):
+def binomial(shape=[1], p=0.5, dtype="float32"):
     """Generate a binomial distribution.
 
     Parameters
     ----------
     shape : list
         Shape of binomial distribution.
+
     p : float
         Probability level for dropping an element.
 
@@ -66,19 +69,22 @@ def binomial(shape=[1], p=0.5, dtype='float32'):
     Tensor
         Binomial distribution.
     """
-    dist = tf.random_uniform(shape=shape, minval=0, maxval=1, dtype='float32')
-    return tf.where(tf.less(dist, tf.fill(shape, p)),
-                    tf.ones(shape, dtype=dtype),
-                    tf.zeros(shape, dtype=dtype))
+    dist = tf.random_uniform(shape=shape, minval=0, maxval=1, dtype="float32")
+    return tf.where(
+        tf.less(dist, tf.fill(shape, p)),
+        tf.ones(shape, dtype=dtype),
+        tf.zeros(shape, dtype=dtype)
+    )
 
 
-def binomial_vec(p_vec, shape=[1], dtype='float32'):
+def binomial_vec(p_vec, shape=[1], dtype="float32"):
     """Generate a binomial distribution based on a vector of probabilities.
 
     Parameters
     ----------
     p_vec : array
         Probability vector.
+
     shape : list
         Shape of binomial distribution.
 
@@ -87,10 +93,12 @@ def binomial_vec(p_vec, shape=[1], dtype='float32'):
     Tensor
         Binomial distribution.
     """
-    dist = tf.random_uniform(shape=shape, minval=0, maxval=1, dtype='float32')
-    return tf.where(tf.less(dist, p_vec),
-                    tf.ones(shape, dtype=dtype),
-                    tf.zeros(shape, dtype=dtype))
+    dist = tf.random_uniform(shape=shape, minval=0, maxval=1, dtype="float32")
+    return tf.where(
+        tf.less(dist, p_vec),
+        tf.ones(shape, dtype=dtype),
+        tf.zeros(shape, dtype=dtype)
+    )
 
 
 def salt_and_pepper_noise(X, rate=0.3):
@@ -102,6 +110,7 @@ def salt_and_pepper_noise(X, rate=0.3):
     ----------
     X : Tensor/Placeholder
         Input to corrupt.
+
     rate : float
         Fraction of elements to be set to zero or one.
 
@@ -112,7 +121,7 @@ def salt_and_pepper_noise(X, rate=0.3):
     """
     a = binomial(shape=tf.shape(X), p=1 - rate)
     b = binomial(shape=tf.shape(X), p=0.5)
-    z = tf.zeros(tf.shape(X), dtype='float32')
+    z = tf.zeros(tf.shape(X), dtype="float32")
     c = tf.where(tf.equal(a, z), b, z)
     return tf.add(tf.multiply(X, a), c)
 
@@ -153,9 +162,9 @@ def gaussian_noise(X, std=1.0):
         Input tensor plus random Gaussian noise with mean 0.0 and standard
         deviation `std`.
     """
-    return tf.add(X, tf.random_normal(shape=tf.shape(X),
-                                      mean=0.0,
-                                      stddev=std))
+    return tf.add(
+        X, tf.random_normal(shape=tf.shape(X), mean=0.0, stddev=std)
+    )
 
 
 class DAE(object):
@@ -174,32 +183,45 @@ class DAE(object):
     ----------
     num_epochs : int
         Passes over the training dataset.
+
     batch_size : int
         Size of minibatches for stochastic optimizers.
+
     hidden_dim : list
         Number of units per hidden layer for encoder/decoder.
+
     n_input : int
         Number of inputs to initial layer.
+
     corrupt_type : str
         Corrupting function (`salt_and_pepper`, `masked`, or `gaussian`).
+
     corrupt_prob : float
         Probability of generating corrupted values.
+
     corrupt_std : float
         Standard deviation of corrupted values (Gaussian).
+
     walkbacks : int
         Number of walkbacks to use.
+
     transfer_fct : object
         Transfer function for hidden layers.
+
     W_init_fct : object
         Initialization function for weights.
+
     b_init_fct : object
         Initialization function for biases.
+
     learning_rate : float
         Learning rate schedule for weight updates.
+
     random_state : int or None, optional (default=None)
         If int, random_state is the seed used by the random number generator.
         If None, the random number generator is the RandomState instance used
         by np.random.
+
     log_every : int
         Print loss after this many steps.
 
@@ -231,18 +253,30 @@ class DAE(object):
         - https://github.com/peteykun/GSN
     """
 
-    def __init__(self, num_epochs, batch_size, hidden_dim, n_input,
-                 corrupt_type='salt_and_pepper', corrupt_prob=0.5,
-                 corrupt_std=0.25, walkbacks=0, transfer_fct=tf.nn.sigmoid,
-                 W_init_fct=init_xavier, b_init_fct=tf.zeros,
-                 learning_rate=0.001, random_state=None, log_every=None):
+    def __init__(
+        self,
+        num_epochs,
+        batch_size,
+        hidden_dim,
+        n_input,
+        corrupt_type="salt_and_pepper",
+        corrupt_prob=0.5,
+        corrupt_std=0.25,
+        walkbacks=0,
+        transfer_fct=tf.nn.sigmoid,
+        W_init_fct=init_xavier,
+        b_init_fct=tf.zeros,
+        learning_rate=0.001,
+        random_state=None,
+        log_every=None,
+    ):
         self.num_epochs = num_epochs
         self.batch_size = batch_size
 
         self.net_arch = {
-            'hidden_dim': hidden_dim,
-            'n_input': n_input,
-            'n_output': n_input
+            "hidden_dim": hidden_dim,
+            "n_input": n_input,
+            "n_output": n_input
         }
 
         self.corrupt_type = corrupt_type
@@ -261,7 +295,7 @@ class DAE(object):
         self.log_every = log_every
 
         # TensorFlow graph input.
-        self.x = tf.placeholder(tf.float32, [None, self.net_arch['n_input']])
+        self.x = tf.placeholder(tf.float32, [None, self.net_arch["n_input"]])
 
         # Create autoencoder network.
         self._create_network()
@@ -278,8 +312,9 @@ class DAE(object):
 
     def _create_network(self):
         """Create a denoising autoencoder network."""
-        layer_dim = np.append(np.array(self.net_arch['n_input']),
-                              self.net_arch['hidden_dim'])
+        layer_dim = np.append(
+            np.array(self.net_arch["n_input"]), self.net_arch["hidden_dim"]
+        )
 
         self.z, self.y, self.p_X_chain = self._autoencoder(self.x, layer_dim)
 
@@ -296,8 +331,10 @@ class DAE(object):
         -------
         z : Tensor
             Inner-most latent representation.
+
         y : Tensor
             Output reconstruction of the input.
+
         p_X_chain : array
             Walkback training chain.
         """
@@ -308,8 +345,10 @@ class DAE(object):
             ----------
             x : Tensor
                 Input placeholder to the network.
+
             corrupt_prob : float
                 Probability of generating corrupted values.
+
             corrupt_std : float
                 Standard deviation of corrupted values (Gaussian).
 
@@ -317,13 +356,13 @@ class DAE(object):
             -------
             Corrupted data, x_corrupted.
             """
-            if self.corrupt_type == 'salt_and_pepper':
+            if self.corrupt_type == "salt_and_pepper":
                 x_corrupted = salt_and_pepper_noise(x, corrupt_prob)
-            elif self.corrupt_type == 'masking':
+            elif self.corrupt_type == "masking":
                 x_corrupted = masking_noise(x, corrupt_prob)
-            elif self.corrupt_type == 'gaussian':
-                x_corrupted = gaussian_noise(x, std=corrupt_std) \
-                    * corrupt_prob + x * (1 - corrupt_prob)
+            elif self.corrupt_type == "gaussian":
+                x_corrupted = (gaussian_noise(x, std=corrupt_std)
+                    * corrupt_prob + x * (1 - corrupt_prob))
             else:
                 x_corrupted = salt_and_pepper_noise(x, corrupt_prob)
             return x_corrupted
@@ -340,8 +379,10 @@ class DAE(object):
             -------
             x : Tensor
                 Input placeholder to the network.
+
             z : Tensor
                 Inner-most latent representation.
+
             y : Tensor
                 Output reconstruction of the input.
             """
@@ -351,12 +392,14 @@ class DAE(object):
             encoder = []
             for layer_i, n_output in enumerate(layer_dim[1:]):
                 n_input = int(layer_input.get_shape()[1])
-                W = tf.Variable(self.W_init_fct(
-                    [n_input, n_output]), dtype=tf.float32)
+                W = tf.Variable(
+                    self.W_init_fct([n_input, n_output]), dtype=tf.float32
+                )
                 b = tf.Variable(self.b_init_fct([n_output]), dtype=tf.float32)
                 encoder.append(W)
                 output = self.transfer_fct(
-                    tf.add(tf.matmul(layer_input, W), b))
+                    tf.add(tf.matmul(layer_input, W), b)
+                )
                 layer_input = output
 
             # Latent representation.
@@ -369,7 +412,8 @@ class DAE(object):
                 W = tf.transpose(encoder[layer_i])
                 b = tf.Variable(self.b_init_fct([n_output]), dtype=tf.float32)
                 output = self.transfer_fct(
-                    tf.add(tf.matmul(layer_input, W), b))
+                    tf.add(tf.matmul(layer_input, W), b)
+                )
                 layer_input = output
 
             # Reconstruction through the network.
@@ -394,8 +438,9 @@ class DAE(object):
     def _create_loss_optimizer(self):
         """Define the cost function."""
         if self.walkbacks > 0:
-            cross_entropies = \
-                [binary_crossentropy(y, self.x) for y in self.p_X_chain]
+            cross_entropies = [
+                binary_crossentropy(y, self.x) for y in self.p_X_chain
+            ]
             self.cost = tf.reduce_mean(tf.add_n(cross_entropies))
         else:
             self.cost = tf.reduce_mean(binary_crossentropy(self.y, self.x))
@@ -433,6 +478,7 @@ class DAE(object):
         ----------
         in_samples : ndarray, shape (n_samples, n_features)
             Matrix containing the data from which to sample.
+
         n_samples : int
             Number of samples to generate.
 
@@ -441,13 +487,13 @@ class DAE(object):
         if not hasattr(in_samples, "__len__"):
             in_samples = [in_samples]
 
-        samples = np.empty(shape=(n_samples, self.net_arch['n_input']))
+        samples = np.empty(shape=(n_samples, self.net_arch["n_input"]))
         for i in range(n_samples):
             if i == 0:
                 # Choose a random sample as the initialization.
                 in_sample = in_samples[
-                    self.random_state.randint(
-                        len(in_samples), size=1)]
+                    self.random_state.randint(len(in_samples), size=1)
+                ]
                 out_sample = self.sess.run(self.y, feed_dict={
                     self.x: in_sample
                 })
@@ -469,7 +515,9 @@ class DAE(object):
 
         Returns cost of mini-batch.
         """
-        cost, opt = self.sess.run((self.cost, self.opt), feed_dict={self.x: X})
+        cost, opt = self.sess.run(
+            (self.cost, self.opt), feed_dict={self.x: X}
+        )
         return cost
 
     def fit(self, X, shuffle=True, display_step=None):
@@ -496,7 +544,8 @@ class DAE(object):
             avg_cost = 0.
             # Loop over all batches.
             start_idxs = range(
-                0, len(X) - self.batch_size + 1, self.batch_size)
+                0, len(X) - self.batch_size + 1, self.batch_size
+            )
             for start_idx in start_idxs:
                 if shuffle:
                     excerpt = indices[start_idx:start_idx + self.batch_size]
@@ -512,8 +561,10 @@ class DAE(object):
             if len(start_idxs) > 0:
                 # Display logs per epoch step.
                 if display_step and epoch % display_step == 0:
-                    print("Epoch: {:d}".format(epoch + 1),
-                          "cost: {:.4f}".format(avg_cost))
+                    print(
+                        "Epoch: {:d}".format(epoch + 1),
+                        "cost: {:.4f}".format(avg_cost)
+                    )
 
         return self
 
@@ -523,20 +574,22 @@ class DAE(object):
 
 
 def main(data, n_samples, args):
-    model = DAE(args.num_epochs,
-                args.batch_size,
-                args.hidden_dim,
-                args.n_input,
-                args.corrupt_type,
-                args.corrupt_prob,
-                args.corrupt_std,
-                args.walkbacks,
-                args.transfer_fct,
-                args.W_init_fct,
-                args.b_init_fct,
-                args.learning_rate,
-                args.random_state,
-                args.log_every)
+    model = DAE(
+        args.num_epochs,
+        args.batch_size,
+        args.hidden_dim,
+        args.n_input,
+        args.corrupt_type,
+        args.corrupt_prob,
+        args.corrupt_std,
+        args.walkbacks,
+        args.transfer_fct,
+        args.W_init_fct,
+        args.b_init_fct,
+        args.learning_rate,
+        args.random_state,
+        args.log_every,
+    )
     model.fit(data)
     samples = model.gen_samples(n_samples)
     model.close()
@@ -545,46 +598,46 @@ def main(data, n_samples, args):
 
 def parse_args():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--num_epochs', type=int, default=1000,
-                        help='Passes over the training dataset.')
-    parser.add_argument('--batch_size', type=int, default=100,
-                        help='Size of minibatches for stochastic optimizers.')
-    parser.add_argument('--hidden_dim', type=list, default=(100,),
-                        help='Number of units per hidden layer for '
-                        'encoder/decoder.')
-    parser.add_argument('--n_input', type=int, default=2,
-                        help='Number of inputs to initial layer.')
-    parser.add_argument('--corrupt_type', type=str,
-                        choices=['salt_and_pepper', 'masking', 'gaussian'],
-                        default='salt_and_pepper',
-                        help='Type of corrupting function.')
-    parser.add_argument('--corrupt_prob', type=float, default=0.5,
-                        help='Probability of generating corrupted values.')
-    parser.add_argument('--corrupt_std', type=float, default=0.25,
-                        help='Standard deviation of corrupted values '
-                        '(gaussian).')
-    parser.add_argument('--walkbacks', type=int, default=0,
-                        help='Number of walkbacks to use.')
-    parser.add_argument('--transfer_fct', type=object, default=tf.nn.sigmoid,
-                        help='Transfer function for hidden layers.')
-    parser.add_argument('--W_init_fct', type=object, default=init_xavier,
-                        help='Initialization function for weights.')
-    parser.add_argument('--b_init_fct', type=object, default=tf.zeros,
-                        help='Initialization function for biases.')
-    parser.add_argument('--learning_rate', type=float, default=0.001,
-                        help='Learning rate schedule for weight updates.')
-    parser.add_argument('--random_state', type=int, default=None,
-                        help='The seed used by the random number generator.')
-    parser.add_argument('--log_every', type=int, default=None,
-                        help='Print loss during training after this many '
-                        'steps.')
+    parser.add_argument("--num_epochs", type=int, default=1000,
+                        help="Passes over the training dataset.")
+    parser.add_argument("--batch_size", type=int, default=100,
+                        help="Size of minibatches for stochastic optimizers.")
+    parser.add_argument("--hidden_dim", type=list, default=(100,),
+                        help="Number of units per hidden layer for "
+                             "encoder/decoder.")
+    parser.add_argument("--n_input", type=int, default=2,
+                        help="Number of inputs to initial layer.")
+    parser.add_argument("--corrupt_type", type=str,
+                        choices=["salt_and_pepper", "masking", "gaussian"],
+                        default="salt_and_pepper",
+                        help="Type of corrupting function.")
+    parser.add_argument("--corrupt_prob", type=float, default=0.5,
+                        help="Probability of generating corrupted values.")
+    parser.add_argument("--corrupt_std", type=float, default=0.25,
+                        help="Standard deviation of corrupted values "
+                             "(gaussian).")
+    parser.add_argument("--walkbacks", type=int, default=0,
+                        help="Number of walkbacks to use.")
+    parser.add_argument("--transfer_fct", type=object, default=tf.nn.sigmoid,
+                        help="Transfer function for hidden layers.")
+    parser.add_argument("--W_init_fct", type=object, default=init_xavier,
+                        help="Initialization function for weights.")
+    parser.add_argument("--b_init_fct", type=object, default=tf.zeros,
+                        help="Initialization function for biases.")
+    parser.add_argument("--learning_rate", type=float, default=0.001,
+                        help="Learning rate schedule for weight updates.")
+    parser.add_argument("--random_state", type=int, default=None,
+                        help="The seed used by the random number generator.")
+    parser.add_argument("--log_every", type=int, default=None,
+                        help="Print loss during training after this many "
+                             "steps.")
     return parser.parse_args()
 
 
 # Test with MNIST.
 def test_mnist():
     import matplotlib as mpl
-    mpl.use('Agg')
+    mpl.use("Agg")
     import matplotlib.pyplot as plt
 
     mnist = tf.keras.datasets.mnist
@@ -606,13 +659,15 @@ def test_mnist():
     y_train = np.eye(10)[y_train]
     y_test = np.eye(10)[y_test]
 
-    dae = DAE(num_epochs=10,
-              batch_size=100,
-              hidden_dim=(512, 256, 64),
-              n_input=784,  # MNIST data input (img shape: 28*28)
-              corrupt_type='salt_and_pepper',
-              corrupt_prob=0.3,
-              walkbacks=0)
+    dae = DAE(
+        num_epochs=10,
+        batch_size=100,
+        hidden_dim=(512, 256, 64),
+        n_input=784,  # MNIST data input (img shape: 28*28)
+        corrupt_type="salt_and_pepper",
+        corrupt_prob=0.3,
+        walkbacks=0,
+    )
 
     dae.fit(X_train, display_step=1)
     X_test_samples = X_test[:100]
@@ -630,7 +685,7 @@ def test_mnist():
         plt.colorbar()
     plt.tight_layout()
     #plt.show()
-    plt.savefig('dae_mnist_rec.png')
+    plt.savefig("dae_mnist_rec.png")
 
     test_input = X_test[101].reshape((1, -1))
     samples = dae.sample(test_input, 400)
@@ -638,12 +693,12 @@ def test_mnist():
 
     fig, ax = plt.subplots(40, 10, figsize=(10, 40))
     for i in range(400):
-        ax[i/10][i%10].imshow(np.reshape(samples[i], (28, 28)), cmap='gray')
-        ax[i/10][i%10].axis('off')
+        ax[i/10][i%10].imshow(np.reshape(samples[i], (28, 28)), cmap="gray")
+        ax[i/10][i%10].axis("off")
     #plt.show()
-    plt.savefig('dae_mnist_samples.png')
+    plt.savefig("dae_mnist_samples.png")
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     #main(data, 100, parse_args())
     test_mnist()

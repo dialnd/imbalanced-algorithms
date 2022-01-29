@@ -152,7 +152,7 @@ class SMOTEBoost(AdaBoostClassifier):
         n_estimators=50,
         learning_rate=1.,
         algorithm="SAMME.R",
-        random_state=None
+        random_state=None,
     ):
 
         self.n_samples = n_samples
@@ -163,7 +163,7 @@ class SMOTEBoost(AdaBoostClassifier):
             base_estimator=base_estimator,
             n_estimators=n_estimators,
             learning_rate=learning_rate,
-            random_state=random_state
+            random_state=random_state,
         )
 
     def fit(self, X, y, sample_weight=None, minority_target=None):
@@ -222,7 +222,7 @@ class SMOTEBoost(AdaBoostClassifier):
             y,
             accept_sparse=accept_sparse,
             dtype=dtype,
-            y_numeric=is_regressor(self)
+            y_numeric=is_regressor(self),
         )
 
         if sample_weight is None:
@@ -269,7 +269,7 @@ class SMOTEBoost(AdaBoostClassifier):
                 y_syn = np.full(
                     X_syn.shape[0],
                     fill_value=self.minority_target,
-                    dtype=np.int64
+                    dtype=np.int64,
                 )
 
                 # Normalize synthetic sample weights based on current training set.
@@ -295,9 +295,10 @@ class SMOTEBoost(AdaBoostClassifier):
             # Boosting step.
             sample_weight, estimator_weight, estimator_error = self._boost(
                 iboost,
-                X, y,
+                X,
+                y,
                 sample_weight,
-                random_state
+                random_state,
             )
 
             # Early termination.

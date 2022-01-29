@@ -67,7 +67,7 @@ class RandomUnderSampler(object):
         )
 
         if self.return_indices:
-            return (self.X[idx], idx)
+            return self.X[idx], idx
         else:
             return self.X[idx]
 

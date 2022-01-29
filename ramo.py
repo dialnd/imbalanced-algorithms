@@ -279,7 +279,7 @@ class RAMOBoost(AdaBoostClassifier):
             y,
             accept_sparse=accept_sparse,
             dtype=dtype,
-            y_numeric=is_regressor(self)
+            y_numeric=is_regressor(self),
         )
 
         if sample_weight is None:
